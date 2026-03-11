@@ -139,7 +139,7 @@ describe("TrackQuestionsPage", () => {
 	it("renders track title and progress", () => {
 		render(<TrackQuestionsPage track="gfe75" />);
 		expect(screen.getByRole("heading", { name: "GFE 75" })).toBeInTheDocument();
-		expect(screen.getByText("Progress: 1/2 complete")).toBeInTheDocument();
+		expect(screen.getByText("1/2 complete")).toBeInTheDocument();
 	});
 
 	it("filters questions by search", async () => {
@@ -150,6 +150,8 @@ describe("TrackQuestionsPage", () => {
 		await user.type(searchInput, "Debounce");
 
 		expect(screen.getByText(/Debounce/)).toBeInTheDocument();
-		expect(screen.queryByText(/Array\.prototype\.reduce/)).not.toBeInTheDocument();
+		expect(
+			screen.queryByText(/Array\.prototype\.reduce/),
+		).not.toBeInTheDocument();
 	});
 });
