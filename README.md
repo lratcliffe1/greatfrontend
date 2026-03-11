@@ -3,7 +3,7 @@
 Portfolio app for solving and showcasing:
 
 - [GFE 75](https://www.greatfrontend.com/interviews/gfe75)
-- [Blind 75](https://www.greatfrontend.com/interviews/study/blind75/questions/algo/array-balanced-brackets)
+- [Blind 75](https://www.greatfrontend.com/interviews/blind75)
 
 The app includes two track tabs, question grids, and detail pages that can render:
 
@@ -38,12 +38,19 @@ Open [http://localhost:3000](http://localhost:3000).
 npm run lint
 npm run typecheck
 npm run test
+npm run test:unit
+npm run test:unit:watch
 npm run test:e2e
+npm run test:e2e:chromium
 npm run build
 npm run start
 ```
 
-`npm run test:e2e` requires Playwright browsers to be installed once via `npx playwright install`.
+`npm run test` runs Jest plus the Playwright Chromium project.
+
+`npm run test:e2e` runs the full Playwright matrix: Chromium, Firefox, and WebKit.
+
+Playwright commands require browsers to be installed once via `npx playwright install`. If you only plan to use `npm run test` or `npm run test:e2e:chromium`, `npx playwright install chromium` is enough.
 
 ## Project layout
 
@@ -69,13 +76,13 @@ npm run start
 
 1. Add a new question entry to `src/content/questions.ts`.
 2. Create implementation files under `src/solutions/<id>` based on `solutionType`.
-3. Run `npm run test`, `npm run lint`, and `npm run test:e2e`.
+3. Run `npm run test` and `npm run lint`. Run `npm run test:e2e` as well if you want full cross-browser coverage.
 
 For a fuller challenge-by-challenge workflow, see `CONTRIBUTING.md`.
 
 ## Store tests
 
-- Redux slice tests live in `src/lib/store/*.test.ts` and run as part of `npm run test`.
+- Redux slice tests live in `src/lib/store/*.test.ts` and run as part of `npm run test:unit` and `npm run test`.
 
 ## Deployment
 

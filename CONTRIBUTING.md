@@ -18,14 +18,18 @@ npm run test
 npm run build
 ```
 
-5. If you want to run browser smoke coverage locally, install Playwright browsers once:
+`npm run test` runs Jest plus the Playwright Chromium project.
+
+5. If you want full browser coverage locally, install Playwright browsers once:
 
 ```bash
 npx playwright install
 npm run test:e2e
 ```
 
-Store-level Redux tests are colocated under `src/lib/store/*.test.ts`.
+If you only need the default `npm run test` flow, `npx playwright install chromium` is enough.
+
+Store-level Redux tests are colocated under `src/lib/store/*.test.ts` and run via `npm run test:unit`.
 
 ## Notes on state management
 

@@ -8,8 +8,8 @@
 		"start": "next start",
 		"lint": "eslint",
 		"typecheck": "tsc --noEmit",
-		"test": "jest",
-		"test:watch": "jest --watch",
+		"test": "npm run test:unit && npm run test:e2e:chromium",
+		"test:unit": "jest",
 		"test:e2e": "playwright test",
 		"test:e2e:chromium": "playwright test --project=chromium"
 	},
