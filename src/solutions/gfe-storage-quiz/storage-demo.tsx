@@ -56,7 +56,8 @@ const COMPARISON_ROWS: ComparisonRow[] = [
 function readCookie(name: string) {
 	const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 	const match = document.cookie.match(new RegExp(`(?:^|; )${escaped}=([^;]*)`));
-	return match ? decodeURIComponent(match[1]) : null;
+	const encodedValue = match?.[1];
+	return encodedValue ? decodeURIComponent(encodedValue) : null;
 }
 
 function setCookie(name: string, value: string) {

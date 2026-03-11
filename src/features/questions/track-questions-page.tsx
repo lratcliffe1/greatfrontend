@@ -186,15 +186,19 @@ export function TrackQuestionsPage({ track }: { track: Track }) {
 	).length;
 
 	return (
-		<section className="min-w-0">
+		<section className="min-w-0" data-testid={`track-page-${track}`}>
 			<div className="mb-5 flex min-w-0 flex-wrap items-end gap-3 sm:gap-4">
 				<TrackTabs />
 				<div className="min-w-0">
-					<h2 className="truncate text-lg font-bold text-foreground sm:text-xl md:text-2xl">
+					<h2
+						data-testid={`track-heading-${track}`}
+						className="truncate text-lg font-bold text-foreground sm:text-xl md:text-2xl"
+					>
 						{getTrackLabel(track)}
 					</h2>
 				</div>
 				<p
+					data-testid="track-progress"
 					className={`basis-full text-xs sm:basis-auto sm:text-sm ${QUESTION_UI_CLASSES.mutedText}`}
 				>
 					{completedCount}/{questions.length} complete
@@ -205,6 +209,7 @@ export function TrackQuestionsPage({ track }: { track: Track }) {
 							size="small"
 							fullWidth
 							disabled={isLoading}
+							data-testid="filter-category"
 							className="order-1 min-[1330px]:order-2 sm:w-auto sm:min-w-35"
 						>
 							<InputLabel id="category-label">Category</InputLabel>
@@ -232,6 +237,7 @@ export function TrackQuestionsPage({ track }: { track: Track }) {
 						size="small"
 						fullWidth
 						disabled={isLoading}
+						data-testid="filter-status"
 						className="order-2 min-[1330px]:order-3 sm:w-auto sm:min-w-30"
 					>
 						<InputLabel id="status-label">Status</InputLabel>
@@ -274,6 +280,7 @@ export function TrackQuestionsPage({ track }: { track: Track }) {
 						<input
 							id="search-questions"
 							type="search"
+							data-testid="filter-search"
 							value={search}
 							onChange={(event) =>
 								dispatch(setSearch({ track, value: event.target.value }))
@@ -290,14 +297,21 @@ export function TrackQuestionsPage({ track }: { track: Track }) {
 			{isLoading ? (
 				<p className={QUESTION_UI_CLASSES.mutedText}>Loading questions...</p>
 			) : (
-				<div className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
+				<div
+					className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2"
+					data-testid="question-grid"
+				>
 					{filtered.map((question) => (
 						<ElevatedCard
 							key={question.id}
+							data-testid={`question-card-${question.slug}`}
 							className="flex h-full min-w-0 flex-col overflow-hidden p-3 sm:p-4"
 						>
 							<div className="mb-1.5 flex min-w-0 items-start justify-between gap-2 sm:mb-2 sm:gap-3">
-								<h3 className="min-w-0 wrap-break-word text-sm font-semibold text-foreground sm:text-base">
+								<h3
+									data-testid={`question-title-${question.slug}`}
+									className="min-w-0 wrap-break-word text-sm font-semibold text-foreground sm:text-base"
+								>
 									#{question.questionNumber} {question.title}
 								</h3>
 								<DifficultyPill difficulty={question.difficulty} />
@@ -321,6 +335,7 @@ export function TrackQuestionsPage({ track }: { track: Track }) {
 									{question.status === "done" ? (
 										<Link
 											href={`/${track}/${question.slug}`}
+											data-testid={`open-solution-${question.slug}`}
 											className="inline-flex items-center rounded-md bg-teal-600 px-2.5 py-1 font-semibold text-white transition hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-400 sm:px-3 sm:py-1.5"
 										>
 											Open solution

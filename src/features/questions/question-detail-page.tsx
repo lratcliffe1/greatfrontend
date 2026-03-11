@@ -75,7 +75,7 @@ export function QuestionDetailPage({ question }: { question: Question }) {
 	const showComplexity = shouldShowComplexity(question.complexity);
 
 	return (
-		<article className="space-y-6">
+		<article className="space-y-6" data-testid="question-detail-page">
 			<div className="flex flex-wrap items-start justify-between gap-4">
 				<div className="min-w-0 space-y-1">
 					<div className="flex flex-wrap items-center gap-2">
@@ -86,19 +86,23 @@ export function QuestionDetailPage({ question }: { question: Question }) {
 							<DifficultyPill difficulty={question.difficulty} />
 						</span>
 					</div>
-					<h2 className="text-3xl font-bold text-foreground">
+					<h2
+						className="text-3xl font-bold text-foreground"
+						data-testid="question-detail-title"
+					>
 						#{question.questionNumber} {question.title}
 					</h2>
 				</div>
 				<Link
 					href={`/${question.track}`}
+					data-testid="back-to-list-link"
 					className="shrink-0 rounded-md bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-400"
 				>
 					Back to list
 				</Link>
 			</div>
 
-			<SurfacePanel className="space-y-2">
+			<SurfacePanel className="space-y-2" data-testid="question-summary-panel">
 				<h3 className={QUESTION_UI_CLASSES.panelHeading}>Problem summary</h3>
 				<p
 					className={`${QUESTION_UI_CLASSES.bodyText} text-[8px] leading-relaxed whitespace-pre-line sm:text-xs`}

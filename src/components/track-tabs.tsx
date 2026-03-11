@@ -12,7 +12,7 @@ export function TrackTabs() {
 	const tabs: Track[] = ["gfe75", "blind75"];
 
 	return (
-		<div className="flex gap-2">
+		<div className="flex gap-2" data-testid="track-tabs">
 			{tabs.map((track) => {
 				const href = `/${track}`;
 				const active = pathname?.startsWith(href) ?? false;
@@ -20,6 +20,7 @@ export function TrackTabs() {
 					<Link
 						key={track}
 						href={href}
+						data-testid={`track-tab-${track}`}
 						className={`rounded-md px-4 py-2 text-sm font-semibold transition ${
 							active
 								? "bg-teal-600 text-white hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-400"
