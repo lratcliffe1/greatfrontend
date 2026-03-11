@@ -3,7 +3,7 @@ import { QuestionDetailPage } from "@/features/questions/question-detail-page";
 import type { Question } from "@/content/questions";
 
 const mockQuestion: Question = {
-	id: "gfe-debounce",
+	id: "gfe-other",
 	questionNumber: 1,
 	slug: "debounce",
 	title: "Debounce",
@@ -11,7 +11,7 @@ const mockQuestion: Question = {
 	category: "JavaScript functions",
 	difficulty: "Medium",
 	sourceUrl: "https://www.greatfrontend.com/interviews/debounce",
-	solutionType: "algo-visualizer",
+	solutionType: "code-and-tests",
 	status: "done",
 	summary:
 		"Debouncing controls how often a function is allowed to execute over time.",
@@ -60,7 +60,7 @@ describe("QuestionDetailPage", () => {
 	it("hides complexity section for conceptual questions", () => {
 		const conceptualQuestion: Question = {
 			...mockQuestion,
-			id: "gfe-storage-quiz",
+			id: "gfe-conceptual-question",
 			complexity: "Conceptual question.",
 		};
 
@@ -99,19 +99,20 @@ describe("QuestionDetailPage", () => {
 		).toBeInTheDocument();
 	});
 
-	it("renders the find-duplicates visualizer for the blind75 question id", () => {
+	it("renders the find-duplicates visualizer for the blind75 question id", async () => {
 		const duplicateQuestion: Question = {
 			...mockQuestion,
 			id: "blind-find-duplicates-in-array",
 			track: "blind75",
 			title: "Find Duplicates in Array",
+			solutionType: "algo-visualizer",
 		};
 
 		render(<QuestionDetailPage question={duplicateQuestion} />);
 
-		expect(screen.getByLabelText("Numbers input")).toBeInTheDocument();
+		expect(await screen.findByLabelText("Numbers input")).toBeInTheDocument();
 		expect(
-			screen.getByText("Find Duplicates in Array implementation"),
+			await screen.findByText("Find Duplicates in Array implementation"),
 		).toBeInTheDocument();
 	});
 });

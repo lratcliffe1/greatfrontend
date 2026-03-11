@@ -6,40 +6,16 @@ import {
 	DifficultyPill,
 	SurfacePanel,
 } from "@/components/ui/tailwind-primitives";
-import { BalancedBracketsVisualizer } from "@/solutions/blind-balanced-brackets/visualizer";
-import { FindDuplicatesInArrayVisualizer } from "@/solutions/blind-find-duplicates-in-array/visualizer";
-import { DebounceVisualizer } from "@/solutions/gfe-debounce/visualizer";
-import { NewsFeedDemo } from "@/solutions/gfe-news-feed/news-feed-demo";
-import { StorageComparisonDemo } from "@/solutions/gfe-storage-quiz/storage-demo";
-import { TodoDemo } from "@/solutions/gfe-todo-list/todo-demo";
 import {
 	QUESTION_UI_CLASSES,
 	SourcePromptLink,
 } from "@/features/questions/question-ui";
+import { getSolutionRenderer } from "@/features/questions/solution-registry";
 
 function renderSolution(question: Question) {
-	if (question.id === "gfe-debounce") {
-		return <DebounceVisualizer />;
-	}
-
-	if (question.id === "gfe-news-feed") {
-		return <NewsFeedDemo />;
-	}
-
-	if (question.id === "gfe-storage-quiz") {
-		return <StorageComparisonDemo />;
-	}
-
-	if (question.id === "blind-balanced-brackets") {
-		return <BalancedBracketsVisualizer />;
-	}
-
-	if (question.id === "blind-find-duplicates-in-array") {
-		return <FindDuplicatesInArrayVisualizer />;
-	}
-
-	if (question.solutionType === "ui-demo") {
-		return <TodoDemo />;
+	const SolutionRenderer = getSolutionRenderer(question);
+	if (SolutionRenderer) {
+		return <SolutionRenderer />;
 	}
 
 	if (question.solutionType === "algo-visualizer") {
