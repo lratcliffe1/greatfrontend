@@ -62,6 +62,7 @@ export function TrackQuestionsPage({ track }: { track: Track }) {
 		return questions.filter((question) => {
 			const matchesSearch =
 				search.length === 0 ||
+				String(question.questionNumber).startsWith(search.trim()) ||
 				question.title.toLowerCase().includes(search.toLowerCase()) ||
 				question.tags.some((tag) =>
 					tag.toLowerCase().includes(search.toLowerCase()),
@@ -99,44 +100,55 @@ export function TrackQuestionsPage({ track }: { track: Track }) {
 						<FormControl
 							size="small"
 							fullWidth
+							disabled={isLoading}
 							className="order-1 min-[1330px]:order-2 sm:w-auto sm:min-w-35"
 						>
 							<InputLabel id="category-label">Category</InputLabel>
 							<Select
 								labelId="category-label"
 								label="Category"
-								value={category}
-								onChange={(event) => dispatch(setCategory(event.target.value))}
+								value={isLoading ? "all" : category}
+								onChange={(event) =>
+									dispatch(setCategory(event.target.value))
+								}
 							>
 								<MenuItem value="all">All</MenuItem>
-								{categories.map((cat) => (
-									<MenuItem key={cat} value={cat}>
-										{cat}
-									</MenuItem>
-								))}
+								{!isLoading &&
+									categories.map((cat) => (
+										<MenuItem key={cat} value={cat}>
+											{cat}
+										</MenuItem>
+									))}
 							</Select>
 						</FormControl>
 					)}
 					<FormControl
 						size="small"
 						fullWidth
+						disabled={isLoading}
 						className="order-2 min-[1330px]:order-3 sm:w-auto sm:min-w-30"
 					>
 						<InputLabel id="status-label">Status</InputLabel>
 						<Select
 							labelId="status-label"
 							label="Status"
-							value={status}
+							value={isLoading ? "all" : status}
 							onChange={(event) =>
 								dispatch(
-									setStatus(event.target.value as Question["status"] | "all"),
+									setStatus(
+										event.target.value as Question["status"] | "all",
+									),
 								)
 							}
 						>
 							<MenuItem value="all">All</MenuItem>
-							<MenuItem value="todo">Todo</MenuItem>
-							<MenuItem value="in-progress">In progress</MenuItem>
-							<MenuItem value="done">Done</MenuItem>
+							{!isLoading && (
+								[
+									<MenuItem key="todo" value="todo">Todo</MenuItem>,
+									<MenuItem key="in-progress" value="in-progress">In progress</MenuItem>,
+									<MenuItem key="done" value="done">Done</MenuItem>,
+								]
+							)}
 						</Select>
 					</FormControl>
 					<div className="group order-3 min-w-0 max-w-65 basis-full min-[1330px]:order-1 min-[1330px]:max-w-none min-[1330px]:basis-auto min-[1330px]:min-w-45">
@@ -152,8 +164,11 @@ export function TrackQuestionsPage({ track }: { track: Track }) {
 							id="search-questions"
 							type="search"
 							value={search}
-							onChange={(event) => dispatch(setSearch(event.target.value))}
-							className="w-full min-w-0 max-w-full rounded border border-card-border bg-background px-3 py-2 text-xs text-foreground focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 dark:focus:border-teal-500 dark:focus:ring-teal-500 sm:text-sm"
+							onChange={(event) =>
+								dispatch(setSearch(event.target.value))
+							}
+							disabled={isLoading}
+							className="w-full min-w-0 max-w-full rounded border border-card-border bg-background px-3 py-2 text-xs text-foreground focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 disabled:opacity-60 dark:focus:border-teal-500 dark:focus:ring-teal-500 sm:text-sm"
 						/>
 					</div>
 				</div>
@@ -180,14 +195,10 @@ export function TrackQuestionsPage({ track }: { track: Track }) {
 								{question.summary}
 							</MutedText>
 							<div className="mb-3 flex flex-wrap items-center gap-1.5 text-[10px] sm:mb-4 sm:gap-2 sm:text-xs">
-								{track !== "blind75" && (
-									<>
-										<span className={QUESTION_UI_CLASSES.mutedText}>
-											{question.category}
-										</span>
-										<span className={QUESTION_UI_CLASSES.mutedText}>•</span>
-									</>
-								)}
+								<span className={QUESTION_UI_CLASSES.mutedText}>
+									{question.category}
+								</span>
+								<span className={QUESTION_UI_CLASSES.mutedText}>•</span>
 								<span className={QUESTION_UI_CLASSES.mutedText}>
 									{question.solutionType}
 								</span>
@@ -204,9 +215,10 @@ export function TrackQuestionsPage({ track }: { track: Track }) {
 									</Link>
 								) : (
 									<span
-										className={`font-semibold ${QUESTION_UI_CLASSES.mutedText}`}
+										className="inline-flex cursor-not-allowed items-center rounded-md border border-card-border px-2.5 py-1 font-semibold opacity-50 [background:var(--card-bg)] [color:var(--muted)] sm:px-3 sm:py-1.5"
+										aria-disabled="true"
 									>
-										To do
+										Open solution
 									</span>
 								)}
 								<SourcePromptLink
