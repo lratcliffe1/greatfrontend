@@ -54,7 +54,7 @@ Playwright commands require browsers to be installed once via `npx playwright in
 ## Project layout
 
 - `src/app`: routes and API handlers
-- `src/content/questions.ts`: typed question manifest
+- `src/content/questions/`: typed question manifests (`gfe75.ts`, `blind75.ts`) and shared types
 - `src/features/questions`: grid/detail pages and renderer logic
 - `src/solutions`: solution implementations and visualizers
 - `tests/e2e`: Playwright tests
@@ -62,7 +62,7 @@ Playwright commands require browsers to be installed once via `npx playwright in
 ## Boilerplate status
 
 - This repo is intentionally seeded with a full challenge backlog.
-- Most entries in `src/content/questions.ts` are `todo` and act as placeholders for iterative implementation.
+- Most entries in `src/content/questions/` are `todo` and act as placeholders for iterative implementation.
 - A small set of questions are fully implemented as working examples (`done`) to validate app flow and testing setup.
 
 ## State management notes
@@ -73,7 +73,7 @@ Playwright commands require browsers to be installed once via `npx playwright in
 
 ## Add a new question
 
-1. Add a new question entry to `src/content/questions.ts`.
+1. Add a new question entry to the matching track file in `src/content/questions/` (`gfe75.ts` or `blind75.ts`).
 2. Create implementation files under `src/solutions/<id>` based on `solutionType`.
 3. Run `npm run test` and `npm run lint`. Run `npm run test:e2e` as well if you want full cross-browser coverage.
 
