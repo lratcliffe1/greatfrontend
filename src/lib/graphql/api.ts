@@ -5,6 +5,7 @@ import { graphqlRequestBaseQuery } from "@rtk-query/graphql-request-base-query";
 import { GraphQLClient } from "graphql-request";
 
 import type { Question, Track } from "@/content/questions";
+import { QUESTION_QUERY, QUESTIONS_QUERY } from "@/lib/graphql/documents";
 import type { QuestionResponse, QuestionsResponse } from "@/lib/graphql/types";
 
 function getGraphQLEndpoint() {
@@ -15,50 +16,6 @@ function getGraphQLEndpoint() {
 }
 
 const client = new GraphQLClient(getGraphQLEndpoint());
-
-const QUESTIONS_QUERY = /* GraphQL */ `
-	query GetQuestions($track: String!) {
-		questions(track: $track) {
-			id
-			questionNumber
-			slug
-			title
-			track
-			category
-			difficulty
-			sourceUrl
-			solutionType
-			status
-			summary
-			cardSummary
-			approach
-			complexity
-			tags
-		}
-	}
-`;
-
-const QUESTION_QUERY = /* GraphQL */ `
-	query GetQuestion($track: String!, $slug: String!) {
-		question(track: $track, slug: $slug) {
-			id
-			questionNumber
-			slug
-			title
-			track
-			category
-			difficulty
-			sourceUrl
-			solutionType
-			status
-			summary
-			cardSummary
-			approach
-			complexity
-			tags
-		}
-	}
-`;
 
 export const graphqlApi = createApi({
 	reducerPath: "graphqlApi",
