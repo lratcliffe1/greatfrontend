@@ -103,6 +103,7 @@ describe("QuestionDetailPage", () => {
 		const duplicateQuestion: Question = {
 			...mockQuestion,
 			id: "blind-find-duplicates-in-array",
+			path: "find-duplicates-in-array",
 			track: "blind75",
 			title: "Find Duplicates in Array",
 			solutionType: "algo_visualizer",

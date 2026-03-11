@@ -6,6 +6,8 @@ This repository is organized for solving one challenge at a time while keeping t
 
 1. Pick the next challenge from `src/content/questions/` (`gfe75.ts` or `blind75.ts`).
 2. Implement solution files under `src/solutions/<track>/<path>`.
+   - For runnable UI/visualizer solutions, add `renderer.tsx` in that folder (default export).
+   - Register the renderer with one line in `src/solutions/renderer-loaders.ts`.
 3. Update the matching manifest entry in the relevant file in `src/content/questions/`:
    - replace `TODO` fields (`sourceUrl`, `summary`, `approach`, `complexity`)
    - set `status` to `in-progress` or `done` as work advances

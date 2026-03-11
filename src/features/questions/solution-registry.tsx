@@ -5,99 +5,47 @@ import type { ComponentType } from "react";
 
 import type { Question } from "@/content/questions";
 import { QUESTION_UI_CLASSES } from "@/features/questions/question-ui";
+import { SOLUTION_RENDERER_LOADERS } from "@/solutions/renderer-loaders";
 
 type SolutionComponent = ComponentType;
-
 function SolutionLoadingState() {
 	return (
-		<div
-			className={`rounded-md bg-slate-50 p-3 text-sm ${QUESTION_UI_CLASSES.bodyText}`}
-		>
+		<div className={`rounded-md bg-slate-50 p-3 text-sm ${QUESTION_UI_CLASSES.bodyText}`}>
 			<p>Loading solution component...</p>
 		</div>
 	);
 }
 
-const DebounceVisualizer = dynamic(
-	() =>
-		import("@/solutions/gfe75/debounce/visualizer").then(
-			(module) => module.DebounceVisualizer,
-		),
-	{
+const DYNAMIC_RENDERER_CACHE = new Map<string, SolutionComponent>();
+
+function isRunnableSolutionType(solutionType: Question["solutionType"]) {
+	return solutionType === "algo_visualizer" || solutionType === "ui_demo";
+}
+
+export function getSolutionRenderer(question: Question): SolutionComponent | null {
+	if (!isRunnableSolutionType(question.solutionType)) {
+		return null;
+	}
+
+	if (question.status !== "done") {
+		return null;
+	}
+
+	const rendererKey = `${question.track}/${question.path}` as keyof typeof SOLUTION_RENDERER_LOADERS;
+	const cachedRenderer = DYNAMIC_RENDERER_CACHE.get(rendererKey);
+	if (cachedRenderer) {
+		return cachedRenderer;
+	}
+
+	const loader = SOLUTION_RENDERER_LOADERS[rendererKey];
+	if (!loader) {
+		return null;
+	}
+
+	const renderer = dynamic(loader, {
 		loading: SolutionLoadingState,
-	},
-);
+	});
+	DYNAMIC_RENDERER_CACHE.set(rendererKey, renderer);
 
-const NewsFeedDemo = dynamic(
-	() =>
-		import("@/solutions/gfe75/news-feed-facebook/news-feed-demo").then(
-			(module) => module.NewsFeedDemo,
-		),
-	{
-		loading: SolutionLoadingState,
-	},
-);
-
-const StorageComparisonDemo = dynamic(
-	() =>
-		import("@/solutions/gfe75/cookie-sessionstorage-localstorage/storage-demo").then(
-			(module) => module.StorageComparisonDemo,
-		),
-	{
-		loading: SolutionLoadingState,
-	},
-);
-
-const BalancedBracketsVisualizer = dynamic(
-	() =>
-		import("@/solutions/blind75/balanced-brackets/visualizer").then(
-			(module) => module.BalancedBracketsVisualizer,
-		),
-	{
-		loading: SolutionLoadingState,
-	},
-);
-
-const FindDuplicatesInArrayVisualizer = dynamic(
-	() =>
-		import("@/solutions/blind75/find-duplicates-in-array/visualizer").then(
-			(module) => module.FindDuplicatesInArrayVisualizer,
-		),
-	{
-		loading: SolutionLoadingState,
-	},
-);
-
-const TodoDemo = dynamic(
-	() =>
-		import("@/solutions/gfe75/todo-list/todo-demo").then(
-			(module) => module.TodoDemo,
-		),
-	{
-		loading: SolutionLoadingState,
-	},
-);
-
-const QUESTION_RENDERERS: Partial<Record<Question["id"], SolutionComponent>> = {
-	"gfe-debounce": DebounceVisualizer,
-	"gfe-news-feed": NewsFeedDemo,
-	"gfe-storage-quiz": StorageComparisonDemo,
-	"blind-balanced-brackets": BalancedBracketsVisualizer,
-	"blind-find-duplicates-in-array": FindDuplicatesInArrayVisualizer,
-};
-
-const SOLUTION_TYPE_RENDERERS: Partial<
-	Record<Question["solutionType"], SolutionComponent>
-> = {
-	ui_demo: TodoDemo,
-};
-
-export function getSolutionRenderer(
-	question: Question,
-): SolutionComponent | null {
-	return (
-		QUESTION_RENDERERS[question.id] ??
-		SOLUTION_TYPE_RENDERERS[question.solutionType] ??
-		null
-	);
+	return renderer;
 }
