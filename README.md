@@ -39,7 +39,6 @@ npm run lint
 npm run typecheck
 npm run test
 npm run test:unit
-npm run test:unit:watch
 npm run test:e2e
 npm run test:e2e:chromium
 npm run build

@@ -10,6 +10,12 @@
 	--surface: #f8fafc;
 	--link: #0f766e;
 	--link-hover: #0d6461;
+	--font-geist-sans:
+		"SF Pro Text", "Segoe UI", "Avenir Next", "Helvetica Neue", "Noto Sans",
+		Arial, sans-serif;
+	--font-geist-mono:
+		"SF Mono", "Menlo", "Consolas", "Liberation Mono", "Courier New",
+		monospace;
 }
 
 @theme inline {

@@ -8,12 +8,28 @@ type GraphQLRequestBody = {
 	variables?: Record<string, unknown>;
 };
 
-export async function POST(request: Request) {
-	const body = (await request.json()) as GraphQLRequestBody;
+function graphQlErrorResponse(message: string, status = 400) {
+	const errors: GraphQLError[] = [{ message }];
+	return NextResponse.json({ data: null, errors }, { status });
+}
 
-	if (!body.query) {
-		const errors: GraphQLError[] = [{ message: "GraphQL query is required." }];
-		return NextResponse.json({ errors }, { status: 400 });
+export async function POST(request: Request) {
+	let body: GraphQLRequestBody;
+
+	try {
+		body = (await request.json()) as GraphQLRequestBody;
+	} catch {
+		return graphQlErrorResponse("Request body must be valid JSON.");
+	}
+
+	if (!body || typeof body !== "object" || Array.isArray(body)) {
+		return graphQlErrorResponse(
+			"GraphQL request body must be a JSON object.",
+		);
+	}
+
+	if (typeof body.query !== "string" || body.query.trim().length === 0) {
+		return graphQlErrorResponse("GraphQL query is required.");
 	}
 
 	const result = await executeGraphQLQuery(body.query, body.variables);
@@ -22,7 +38,7 @@ export async function POST(request: Request) {
 		const errors: GraphQLError[] = result.errors.map((error) => ({
 			message: error.message,
 		}));
-		return NextResponse.json({ errors }, { status: 400 });
+		return NextResponse.json({ data: result.data ?? null, errors }, { status: 400 });
 	}
 
 	return NextResponse.json({ data: result.data });

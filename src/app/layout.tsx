@@ -1,19 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppHeader } from "@/components/app-header";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { AppProviders } from "@/providers/app-providers";
-
-const geistSans = Geist({
-	variable: "--font-geist-sans",
-	subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-	variable: "--font-geist-mono",
-	subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
 	title: "GreatFrontEnd Portfolio",
@@ -35,9 +24,7 @@ export default function RootLayout({
 					}}
 				/>
 			</head>
-			<body
-				className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col bg-background antialiased`}
-			>
+			<body className="flex min-h-screen flex-col bg-background antialiased">
 				<AppProviders>
 					<div className="flex min-h-screen flex-1 flex-col">
 						<AppHeader />
