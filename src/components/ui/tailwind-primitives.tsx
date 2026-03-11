@@ -1,4 +1,4 @@
-import type { HTMLAttributes, ReactNode } from "react";
+import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
 
 type BaseProps = {
 	children: ReactNode;
@@ -16,9 +16,22 @@ const PRIMITIVE_CLASSES = {
 		"space-y-3 rounded-md border p-3 [border-color:var(--card-border)] [background:var(--surface)]",
 	metaPill:
 		"rounded-full px-2 py-1 text-xs font-medium [background:var(--surface)] [color:var(--muted)]",
-	stepControlButton:
-		"rounded-md border border-card-border px-4 py-2 text-sm font-medium [background:var(--card-bg)] [color:var(--foreground)] transition hover:[background:var(--surface)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:[background:var(--card-bg)]",
 	mutedText: "text-sm [color:var(--muted)]",
+} as const;
+
+const BUTTON_VARIANT_CLASSES = {
+	primary:
+		"bg-teal-600 text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:border disabled:border-card-border disabled:[background:var(--card-bg)] disabled:text-muted disabled:hover:[background:var(--card-bg)] disabled:hover:text-muted dark:bg-teal-500 dark:hover:bg-teal-400 dark:disabled:[background:var(--card-bg)]",
+	danger:
+		"bg-red-600 text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-red-600",
+	dangerSubtle:
+		"bg-red-50 text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-red-50",
+} as const;
+
+const BUTTON_SIZE_CLASSES = {
+	md: "px-4 py-2 text-sm",
+	sm: "px-2 py-1 text-sm",
+	xs: "px-2 py-1 text-xs",
 } as const;
 
 function withClass(base: string, extra?: string) {
@@ -136,6 +149,37 @@ export function StatusBadge({
 	);
 }
 
+export function AppButton({
+	children,
+	className,
+	variant = "primary",
+	size = "md",
+	type = "button",
+	...props
+}: {
+	children: ReactNode;
+	className?: string;
+	variant?: keyof typeof BUTTON_VARIANT_CLASSES;
+	size?: keyof typeof BUTTON_SIZE_CLASSES;
+	type?: "button" | "submit" | "reset";
+} & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type">) {
+	const baseClasses = "rounded-md font-semibold transition";
+	const variantClasses = BUTTON_VARIANT_CLASSES[variant];
+	const sizeClasses = BUTTON_SIZE_CLASSES[size];
+	return (
+		<button
+			type={type}
+			className={withClass(
+				`${baseClasses} ${variantClasses} ${sizeClasses}`,
+				className,
+			)}
+			{...props}
+		>
+			{children}
+		</button>
+	);
+}
+
 export function StepControlButton({
 	children,
 	disabled,
@@ -146,14 +190,9 @@ export function StepControlButton({
 	onClick: () => void;
 }) {
 	return (
-		<button
-			type="button"
-			onClick={onClick}
-			disabled={disabled}
-			className={PRIMITIVE_CLASSES.stepControlButton}
-		>
+		<AppButton type="button" onClick={onClick} disabled={disabled}>
 			{children}
-		</button>
+		</AppButton>
 	);
 }
 
@@ -168,5 +207,34 @@ export function MutedText({
 		<p className={withClass(PRIMITIVE_CLASSES.mutedText, className)}>
 			{children}
 		</p>
+	);
+}
+
+export function EditableFieldPrompt({
+	htmlFor,
+	label,
+	hint,
+	badgeLabel = "Editable",
+}: {
+	htmlFor: string;
+	label: string;
+	hint: string;
+	badgeLabel?: string;
+}) {
+	return (
+		<div className="space-y-1">
+			<div className="flex flex-wrap items-center gap-2">
+				<label
+					className="text-sm font-medium text-foreground"
+					htmlFor={htmlFor}
+				>
+					{label}
+				</label>
+				<span className="rounded-full border border-teal-400/60 bg-teal-500/10 px-2 py-0.5 text-xs font-semibold text-teal-700 dark:text-teal-300">
+					{badgeLabel}
+				</span>
+			</div>
+			<p className="text-xs text-muted">{hint}</p>
+		</div>
 	);
 }

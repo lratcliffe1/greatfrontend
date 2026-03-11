@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { EditableFieldPrompt } from "@/components/ui/tailwind-primitives";
 import {
 	StepVisualizerLayout,
 	type CodeLine,
@@ -52,16 +53,16 @@ export function BalancedBracketsVisualizer() {
 	return (
 		<div className="space-y-4">
 			<div className="space-y-2">
-				<label
-					className="text-sm font-medium text-foreground"
+				<EditableFieldPrompt
 					htmlFor="bracket-input"
-				>
-					Bracket input
-				</label>
+					label="Bracket input"
+					hint="Type any bracket sequence here to see the algorithm step through your input."
+				/>
 				<input
 					id="bracket-input"
 					className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground"
 					value={input}
+					placeholder="Try: ([]){}, ([)], or ((("
 					onChange={(event) => {
 						setInput(event.target.value);
 						setStepIndex(0);

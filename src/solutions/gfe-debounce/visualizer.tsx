@@ -3,6 +3,10 @@
 import { useMemo, useRef, useState } from "react";
 
 import {
+	AppButton,
+	EditableFieldPrompt,
+} from "@/components/ui/tailwind-primitives";
+import {
 	StepVisualizerLayout,
 	type CodeLine,
 } from "@/components/visualizer/step-visualizer-layout";
@@ -92,36 +96,29 @@ export function DebounceVisualizer() {
 
 	return (
 		<div className="space-y-5">
-			<div className="flex flex-wrap items-center gap-3">
-				<label
-					className="text-sm font-medium text-foreground"
+			<div className="space-y-2">
+				<EditableFieldPrompt
 					htmlFor="delay-ms"
-				>
-					Delay (ms)
-				</label>
-				<input
-					id="delay-ms"
-					type="number"
-					min={100}
-					step={100}
-					value={delayMs}
-					onChange={(event) => setDelayMs(Number(event.target.value) || 100)}
-					className="w-28 rounded-md border border-card-border bg-background px-2 py-1 text-foreground"
+					label="Delay (ms)"
+					hint="Change the delay to see how debounce timing affects execution."
 				/>
-				<button
-					type="button"
-					onClick={triggerDebouncedCall}
-					className="rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-600 dark:bg-teal-500 dark:hover:bg-teal-400"
-				>
-					Trigger debounced handler
-				</button>
-				<button
-					type="button"
-					onClick={runRapidScenario}
-					className="rounded-md border border-card-border px-4 py-2 text-sm font-semibold [background:var(--card-bg)] text-foreground hover:[background:var(--surface)]"
-				>
-					Run rapid 3-click scenario
-				</button>
+				<div className="flex flex-wrap items-center gap-3">
+					<input
+						id="delay-ms"
+						type="number"
+						min={100}
+						step={100}
+						value={delayMs}
+						onChange={(event) => setDelayMs(Number(event.target.value) || 100)}
+						className="w-28 rounded-md border border-card-border bg-background px-2 py-1 text-foreground"
+					/>
+					<AppButton type="button" onClick={triggerDebouncedCall}>
+						Trigger debounced handler
+					</AppButton>
+					<AppButton type="button" onClick={runRapidScenario}>
+						Run rapid 3-click scenario
+					</AppButton>
+				</div>
 			</div>
 
 			<StepVisualizerLayout

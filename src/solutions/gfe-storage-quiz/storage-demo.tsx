@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AppButton } from "@/components/ui/tailwind-primitives";
 
 const COOKIE_KEY = "gfe_cookie_demo";
 const SESSION_KEY = "gfe_session_demo";
@@ -58,26 +59,26 @@ export function StorageComparisonDemo() {
 						Current: {cookieValue ?? "(empty)"}
 					</p>
 					<div className="mt-3 flex gap-2">
-						<button
+						<AppButton
 							type="button"
-							className="rounded bg-teal-700 px-2 py-1 text-xs font-semibold text-white"
+							size="xs"
 							onClick={() => {
 								setCookie(COOKIE_KEY, `cookie-${Date.now()}`);
 								refreshValues();
 							}}
 						>
 							Set cookie
-						</button>
-						<button
+						</AppButton>
+						<AppButton
 							type="button"
-							className="rounded bg-slate-200 px-2 py-1 text-xs"
+							size="xs"
 							onClick={() => {
 								clearCookie(COOKIE_KEY);
 								refreshValues();
 							}}
 						>
 							Clear
-						</button>
+						</AppButton>
 					</div>
 				</section>
 
@@ -90,26 +91,26 @@ export function StorageComparisonDemo() {
 						Current: {sessionValue ?? "(empty)"}
 					</p>
 					<div className="mt-3 flex gap-2">
-						<button
+						<AppButton
 							type="button"
-							className="rounded bg-teal-700 px-2 py-1 text-xs font-semibold text-white"
+							size="xs"
 							onClick={() => {
 								sessionStorage.setItem(SESSION_KEY, `session-${Date.now()}`);
 								refreshValues();
 							}}
 						>
 							Set session
-						</button>
-						<button
+						</AppButton>
+						<AppButton
 							type="button"
-							className="rounded bg-slate-200 px-2 py-1 text-xs"
+							size="xs"
 							onClick={() => {
 								sessionStorage.removeItem(SESSION_KEY);
 								refreshValues();
 							}}
 						>
 							Clear
-						</button>
+						</AppButton>
 					</div>
 				</section>
 
@@ -122,26 +123,26 @@ export function StorageComparisonDemo() {
 						Current: {localValue ?? "(empty)"}
 					</p>
 					<div className="mt-3 flex gap-2">
-						<button
+						<AppButton
 							type="button"
-							className="rounded bg-teal-700 px-2 py-1 text-xs font-semibold text-white"
+							size="xs"
 							onClick={() => {
 								localStorage.setItem(LOCAL_KEY, `local-${Date.now()}`);
 								refreshValues();
 							}}
 						>
 							Set local
-						</button>
-						<button
+						</AppButton>
+						<AppButton
 							type="button"
-							className="rounded bg-slate-200 px-2 py-1 text-xs"
+							size="xs"
 							onClick={() => {
 								localStorage.removeItem(LOCAL_KEY);
 								refreshValues();
 							}}
 						>
 							Clear
-						</button>
+						</AppButton>
 					</div>
 				</section>
 			</div>

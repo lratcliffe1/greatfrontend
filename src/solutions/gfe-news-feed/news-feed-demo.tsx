@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AppButton } from "@/components/ui/tailwind-primitives";
 
 type FeedPost = {
 	id: string;
@@ -213,13 +214,9 @@ export function NewsFeedDemo() {
 					className="min-h-24 w-full rounded-md border border-slate-300 px-3 py-2"
 					placeholder="Share something..."
 				/>
-				<button
-					type="submit"
-					disabled={submitting}
-					className="rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-				>
+				<AppButton type="submit" disabled={submitting}>
 					{submitting ? "Publishing..." : "Publish"}
-				</button>
+				</AppButton>
 			</form>
 
 			{error && <p className="text-sm text-red-700">{error}</p>}
@@ -237,17 +234,18 @@ export function NewsFeedDemo() {
 							<span>{formatRelativeTime(post.createdAt)}</span>
 						</div>
 						<p className="mb-3 text-slate-800">{post.content}</p>
-						<button
+						<AppButton
 							type="button"
+							size="sm"
 							onClick={() => toggleLike(post.id)}
-							className={`rounded px-3 py-1 text-sm font-medium ${
+							className={
 								post.likedByMe
-									? "bg-teal-700 text-white"
-									: "bg-slate-100 text-slate-700 hover:bg-slate-200"
-							}`}
+									? "ring-2 ring-teal-200 dark:ring-teal-300/40"
+									: undefined
+							}
 						>
 							{post.likedByMe ? "Liked" : "Like"} • {post.likes}
-						</button>
+						</AppButton>
 					</article>
 				))}
 			</div>

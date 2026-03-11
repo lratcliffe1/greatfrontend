@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AppButton } from "@/components/ui/tailwind-primitives";
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import { addTask, removeTask } from "@/lib/store/todoDemoSlice";
 
@@ -32,12 +33,7 @@ export function TodoDemo() {
 					placeholder="Add a task"
 					className="flex-1 rounded-md border border-slate-300 px-3 py-2"
 				/>
-				<button
-					type="submit"
-					className="rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white"
-				>
-					Submit
-				</button>
+				<AppButton type="submit">Submit</AppButton>
 			</form>
 
 			<ul className="space-y-2">
@@ -47,13 +43,15 @@ export function TodoDemo() {
 						className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2"
 					>
 						<span>{task.label}</span>
-						<button
+						<AppButton
 							type="button"
+							variant="dangerSubtle"
+							size="sm"
+							className="font-medium"
 							onClick={() => deleteTask(task.id)}
-							className="rounded bg-red-50 px-2 py-1 text-sm font-medium text-red-700"
 						>
 							Delete
-						</button>
+						</AppButton>
 					</li>
 				))}
 			</ul>

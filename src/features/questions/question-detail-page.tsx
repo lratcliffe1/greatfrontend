@@ -82,7 +82,7 @@ export function QuestionDetailPage({ question }: { question: Question }) {
 				</div>
 				<Link
 					href={`/${question.track}`}
-					className="shrink-0 rounded-md border border-card-border px-4 py-2 text-sm font-medium [background:var(--card-bg)] text-foreground transition hover:[background:var(--surface)]"
+					className="shrink-0 rounded-md bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-400"
 				>
 					Back to list
 				</Link>

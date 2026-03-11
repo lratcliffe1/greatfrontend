@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AppButton } from "@/components/ui/tailwind-primitives";
 
 export default function QuestionError({
 	error,
@@ -16,13 +17,14 @@ export default function QuestionError({
 			</h2>
 			<p className="text-sm text-red-700">{error.message}</p>
 			<div className="flex gap-3">
-				<button
+				<AppButton
 					type="button"
+					variant="danger"
+					className="font-medium"
 					onClick={reset}
-					className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
 				>
 					Try again
-				</button>
+				</AppButton>
 				<Link
 					href="/"
 					className="rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
