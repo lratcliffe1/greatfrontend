@@ -4,6 +4,7 @@ import {
 	selectSearch,
 	selectStatus,
 } from "@/lib/store/selectors";
+import { graphqlApi } from "@/lib/graphql/api";
 import filtersReducer, {
 	resetFilters,
 	setCategory,
@@ -16,14 +17,15 @@ function getState(filters: ReturnType<typeof filtersReducer>) {
 	return {
 		filters,
 		todoDemo: todoDemoReducer(undefined as never, { type: "init" } as never),
+		[graphqlApi.reducerPath]: graphqlApi.reducer(undefined, {
+			type: "init",
+		}),
 	};
 }
 
 describe("selectors", () => {
 	it("selectSearch returns search value", () => {
-		const state = getState(
-			filtersReducer(undefined, setSearch("debounce")),
-		);
+		const state = getState(filtersReducer(undefined, setSearch("debounce")));
 		expect(selectSearch(state)).toBe("debounce");
 	});
 
@@ -35,9 +37,7 @@ describe("selectors", () => {
 	});
 
 	it("selectStatus returns status value", () => {
-		const state = getState(
-			filtersReducer(undefined, setStatus("done")),
-		);
+		const state = getState(filtersReducer(undefined, setStatus("done")));
 		expect(selectStatus(state)).toBe("done");
 	});
 
@@ -47,25 +47,18 @@ describe("selectors", () => {
 	});
 
 	it("selectHasActiveFilters returns true when search is set", () => {
-		const state = getState(
-			filtersReducer(undefined, setSearch("todo")),
-		);
+		const state = getState(filtersReducer(undefined, setSearch("todo")));
 		expect(selectHasActiveFilters(state)).toBe(true);
 	});
 
 	it("selectHasActiveFilters returns true when category is not all", () => {
-		const state = getState(
-			filtersReducer(undefined, setCategory("Quiz")),
-		);
+		const state = getState(filtersReducer(undefined, setCategory("Quiz")));
 		expect(selectHasActiveFilters(state)).toBe(true);
 	});
 
 	it("selectHasActiveFilters returns false after resetFilters", () => {
 		const state = getState(
-			filtersReducer(
-				filtersReducer(undefined, setSearch("x")),
-				resetFilters(),
-			),
+			filtersReducer(filtersReducer(undefined, setSearch("x")), resetFilters()),
 		);
 		expect(selectHasActiveFilters(state)).toBe(false);
 	});
