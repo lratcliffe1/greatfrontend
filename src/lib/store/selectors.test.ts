@@ -1,16 +1,12 @@
 import { selectCategory, selectHasActiveFilters, selectSearch, selectStatus } from "@/lib/store/selectors";
 import { graphqlApi } from "@/lib/graphql/api";
 import filtersReducer, { resetFilters, setCategory, setSearch, setStatus } from "@/lib/store/filtersSlice";
-import todoDemoReducer from "@/lib/store/todoDemoSlice";
 import type { Track } from "@/content/questions";
 
 function getState(filters: ReturnType<typeof filtersReducer>) {
 	return {
 		filters,
-		todoDemo: todoDemoReducer(undefined as never, { type: "init" } as never),
-		[graphqlApi.reducerPath]: graphqlApi.reducer(undefined, {
-			type: "init",
-		}),
+		[graphqlApi.reducerPath]: graphqlApi.reducer(undefined, { type: "init" }),
 	};
 }
 

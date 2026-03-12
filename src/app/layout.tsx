@@ -17,13 +17,7 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en" className="bg-background">
-			<head>
-				<style
-					dangerouslySetInnerHTML={{
-						__html: `@media(prefers-color-scheme:dark){html,body{background-color:#0a0a0a}}@media(prefers-color-scheme:light){html,body{background-color:#fff}}`,
-					}}
-				/>
-			</head>
+			<head />
 			<body className="flex min-h-screen flex-col bg-background antialiased">
 				<AppProviders>
 					<div className="flex min-h-screen flex-1 flex-col">

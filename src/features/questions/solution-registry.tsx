@@ -10,7 +10,7 @@ import { SOLUTION_RENDERER_LOADERS } from "@/solutions/renderer-loaders";
 type SolutionComponent = ComponentType;
 function SolutionLoadingState() {
 	return (
-		<div className={`rounded-md bg-slate-50 p-3 text-sm ${QUESTION_UI_CLASSES.bodyText}`}>
+		<div className={`rounded-md bg-card-bg p-3 text-sm ${QUESTION_UI_CLASSES.bodyText}`}>
 			<p>Loading solution component...</p>
 		</div>
 	);
@@ -31,15 +31,16 @@ export function getSolutionRenderer(question: Question): SolutionComponent | nul
 		return null;
 	}
 
-	const rendererKey = `${question.track}/${question.path}` as keyof typeof SOLUTION_RENDERER_LOADERS;
+	const rendererKey = `${question.track}/${question.path}`;
+	const loader =
+		rendererKey in SOLUTION_RENDERER_LOADERS ? SOLUTION_RENDERER_LOADERS[rendererKey as keyof typeof SOLUTION_RENDERER_LOADERS] : undefined;
+	if (!loader) {
+		return null;
+	}
+
 	const cachedRenderer = DYNAMIC_RENDERER_CACHE.get(rendererKey);
 	if (cachedRenderer) {
 		return cachedRenderer;
-	}
-
-	const loader = SOLUTION_RENDERER_LOADERS[rendererKey];
-	if (!loader) {
-		return null;
 	}
 
 	const renderer = dynamic(loader, {

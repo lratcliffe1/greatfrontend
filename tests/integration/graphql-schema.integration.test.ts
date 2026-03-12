@@ -54,4 +54,44 @@ describe("GraphQL schema integration", () => {
 
 		expect(payload.errors?.[0]?.message).toContain('Cannot query field "missingField" on type "Query".');
 	});
+
+	it("returns tasks and supports add/remove/clear", async () => {
+		await executeGraphQLQuery(`mutation { clearTasks }`);
+		const tasksResult = await executeGraphQLQuery(`{ tasks { id label } }`);
+		expect(tasksResult.errors).toBeUndefined();
+		expect((tasksResult.data as { tasks: { id: number; label: string }[] }).tasks).toEqual([]);
+
+		const addResult = await executeGraphQLQuery(`mutation AddTask($label: String!) { addTask(label: $label) { id label } }`, { label: "Test task" });
+		expect(addResult.errors).toBeUndefined();
+		expect((addResult.data as { addTask: { id: number; label: string } }).addTask).toMatchObject({
+			label: "Test task",
+		});
+
+		const tasksAfterAdd = await executeGraphQLQuery(`{ tasks { id label } }`);
+		expect((tasksAfterAdd.data as { tasks: { id: number; label: string }[] }).tasks).toHaveLength(1);
+
+		const taskId = (addResult.data as { addTask: { id: number } }).addTask.id;
+		await executeGraphQLQuery(`mutation RemoveTask($id: Int!) { removeTask(id: $id) }`, { id: taskId });
+
+		const tasksAfterRemove = await executeGraphQLQuery(`{ tasks { id label } }`);
+		expect((tasksAfterRemove.data as { tasks: unknown[] }).tasks).toEqual([]);
+	});
+
+	it("returns feed page with posts", async () => {
+		const result = await executeGraphQLQuery(`
+      query GetFeedPage($cursor: String) {
+        feedPage(cursor: $cursor) {
+          posts { id author content createdAt }
+          nextCursor
+        }
+      }
+    `);
+		expect(result.errors).toBeUndefined();
+		const feed = (result.data as { feedPage: { posts: { author: string; content: string }[] } }).feedPage;
+		expect(feed.posts).toHaveLength(4);
+		expect(feed.posts[0]).toMatchObject({
+			author: expect.any(String),
+			content: expect.any(String),
+		});
+	});
 });

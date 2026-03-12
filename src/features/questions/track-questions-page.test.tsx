@@ -1,44 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { render, screen, waitFor, within } from "@/test-utils";
 import { TrackQuestionsPage } from "@/features/questions/track-questions-page";
-import type { Question } from "@/content/questions";
-
-const mockQuestions: Question[] = [
-	{
-		id: "q1",
-		questionNumber: 1,
-		path: "debounce",
-		title: "Debounce",
-		track: "gfe75",
-		category: "JavaScript functions",
-		difficulty: "Medium",
-		sourceUrl: "https://example.com",
-		solutionType: "algo_visualizer",
-		status: "done",
-		summary: "Delay function execution.",
-		cardSummary: "Delay function execution.",
-		approach: "Use a closure.",
-		complexity: "O(1)",
-		tags: ["timers", "closures"],
-	},
-	{
-		id: "q2",
-		questionNumber: 2,
-		path: "array-reduce",
-		title: "Array.prototype.reduce",
-		track: "gfe75",
-		category: "JavaScript functions",
-		difficulty: "Easy",
-		sourceUrl: "https://example.com",
-		solutionType: "code_and_tests",
-		status: "todo",
-		summary: "Implement reduce.",
-		cardSummary: "TODO: Add concise card summary.",
-		approach: "TODO",
-		complexity: "TODO",
-		tags: [],
-	},
-];
+import { mockQuestions } from "@/fixtures/questions";
 
 describe("TrackQuestionsPage", () => {
 	beforeEach(() => {
@@ -70,7 +33,7 @@ describe("TrackQuestionsPage", () => {
 	});
 
 	it("hydrates filters from URL params", () => {
-		window.history.replaceState(window.history.state, "", "/gfe75?search=reduce&status=todo&category=JavaScript%20functions");
+		window.history.replaceState(window.history.state, "", "/gfe75?searchGfe=reduce&statusGfe=todo&categoryGfe=JavaScript%20functions");
 
 		render(<TrackQuestionsPage track="gfe75" questions={mockQuestions} />);
 
@@ -90,7 +53,7 @@ describe("TrackQuestionsPage", () => {
 		await user.type(searchInput, "Debounce");
 
 		await waitFor(() => {
-			expect(window.location.search).toContain("search=Debounce");
+			expect(window.location.search).toContain("searchGfe=Debounce");
 		});
 	});
 });

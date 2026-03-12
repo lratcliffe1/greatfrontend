@@ -16,7 +16,7 @@ The app includes two track tabs, question grids, and detail pages that can rende
 
 - React + Next.js (App Router) + TypeScript
 - Redux (currently used for shared question filter state)
-- GraphQL (`/api/graphql`) + `graphql-request`
+- GraphQL (`/api/graphql`) + RTK Query for optional client-side data fetching; pages use SSG with content for optimal performance. Todo and News Feed demos use in-memory data through GraphQL; the persistence layer is isolated so a database can be swapped in later (see [GraphQL & data](#graphql--data)).
 - Tailwind CSS + MUI
 - Jest (unit testing)
 - Playwright (integration testing)
@@ -56,8 +56,10 @@ Playwright commands require browsers to be installed once via `npx playwright in
 - `src/app`: routes and API handlers
 - `src/content/questions/`: typed question manifests (`gfe75.ts`, `blind75.ts`) and shared types
 - `src/features/questions`: grid/detail pages and renderer logic
+- `src/fixtures`: shared test fixtures (e.g. mock questions)
 - `src/solutions`: solution implementations and visualizers
 - `tests/e2e`: Playwright tests
+- `tests/integration`: integration tests
 
 ## Boilerplate status
 
@@ -65,9 +67,13 @@ Playwright commands require browsers to be installed once via `npx playwright in
 - Most entries in `src/content/questions/` are `todo` and act as placeholders for iterative implementation.
 - A small set of questions are fully implemented as working examples (`done`) to validate app flow and testing setup.
 
+## GraphQL & data
+
+Todo and News Feed demos use in-memory data that flows through GraphQL as if from a database. Persistence is isolated in `src/lib/graphql/demo-resolvers.ts`—a single module with minimal surface area. To add a database later, replace the demo resolvers with DB-backed resolvers that implement the same Query/Mutation shape; the schema, API route, and client code stay unchanged.
+
 ## State management notes
 
-- Redux is intentionally wired globally and currently powers question filters and the Todo demo task list.
+- Redux is intentionally wired globally and currently powers question filters.
 - As you implement more challenges, prefer local state first and promote to Redux only when state must be shared across routes/components.
 - Redux state persists across in-app route navigation, but resets on full browser refresh unless you add storage hydration.
 

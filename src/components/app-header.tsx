@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import type { Track } from "@/content/questions";
+import { PRIMARY_BUTTON_SM_CLASSES } from "@/components/ui/tailwind-primitives";
 import { getTrackLabel } from "@/lib/tracks";
 
 export function AppHeader() {
@@ -17,11 +18,7 @@ export function AppHeader() {
 					{tracks.map((track) => {
 						const href = `/${track}`;
 						return (
-							<Link
-								key={track}
-								href={href}
-								className="rounded-md bg-teal-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-400"
-							>
+							<Link key={track} href={href} className={PRIMARY_BUTTON_SM_CLASSES}>
 								{getTrackLabel(track)}
 							</Link>
 						);

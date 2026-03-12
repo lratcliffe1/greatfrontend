@@ -1,25 +1,18 @@
 import { render, screen } from "@/test-utils";
 import { QuestionDetailPage } from "@/features/questions/question-detail-page";
 import type { Question } from "@/content/questions";
+import { createMockQuestion } from "@/fixtures/questions";
 
-const mockQuestion: Question = {
+const mockQuestion = createMockQuestion({
 	id: "gfe-other",
-	questionNumber: 1,
-	path: "debounce",
-	title: "Debounce",
-	track: "gfe75",
-	category: "JavaScript functions",
-	difficulty: "Medium",
 	sourceUrl: "https://www.greatfrontend.com/interviews/debounce",
 	solutionType: "code_and_tests",
-	status: "done",
 	summary: "Debouncing controls how often a function is allowed to execute over time.",
 	cardSummary:
 		"Implement a function to limit how many times a function can be executed by delaying the execution of the function until after a specified time after its last execution attempt",
 	approach: "Store a timeout id in closure state. On each invocation, clear the previous timeout and schedule a new one for `wait` ms.",
 	complexity: "Time: O(1) per call, Space: O(1).",
-	tags: ["timers", "closures"],
-};
+});
 
 describe("QuestionDetailPage", () => {
 	it("renders question details", () => {
@@ -31,9 +24,7 @@ describe("QuestionDetailPage", () => {
 		expect(screen.queryByText("Done")).not.toBeInTheDocument();
 		expect(screen.getByText("Debouncing controls how often a function is allowed to execute over time.")).toBeInTheDocument();
 		expect(
-			screen.getByText(
-				"Store a timeout id in closure state. On each invocation, clear the previous timeout and schedule a new one for `wait` ms.",
-			),
+			screen.getByText("Store a timeout id in closure state. On each invocation, clear the previous timeout and schedule a new one for `wait` ms."),
 		).toBeInTheDocument();
 		expect(screen.getByText("Time: O(1) per call, Space: O(1).")).toBeInTheDocument();
 	});

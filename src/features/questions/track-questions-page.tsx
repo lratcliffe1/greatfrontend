@@ -1,89 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 
 import type { Question, Track } from "@/content/questions";
 import { DifficultyPill, ElevatedCard, MutedText, StatusBadge } from "@/components/ui/tailwind-primitives";
-import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
-import { hydrateFiltersFromQuery, setCategory, setSearch, setStatus } from "@/lib/store/filtersSlice";
-import { selectCategory, selectSearch, selectStatus } from "@/lib/store/selectors";
+import { useAppDispatch } from "@/lib/store/hooks";
+import { setCategory, setSearch, setStatus } from "@/lib/store/filtersSlice";
 import { TrackTabs } from "@/components/track-tabs";
 import { getTrackLabel } from "@/lib/tracks";
 import { QUESTION_UI_CLASSES, SourcePromptLink } from "@/features/questions/question-ui";
+import { useFilterSync } from "@/features/questions/use-url-filters";
 
-type TrackFilterValues = {
-	search: string;
-	category: string;
-	status: Question["status"] | "all";
-};
-
-function isTrackStatus(value: string | null): value is Question["status"] {
-	return value === "todo" || value === "in_progress" || value === "done";
-}
-
-function getUrlFilters(track: Track): {
-	hasFilterParams: boolean;
-	filters: TrackFilterValues;
-} {
-	const defaults: TrackFilterValues = {
-		search: "",
-		category: "all",
-		status: "all",
-	};
-
-	if (typeof window === "undefined") {
-		return {
-			hasFilterParams: false,
-			filters: defaults,
-		};
-	}
-
-	const params = new URLSearchParams(window.location.search);
-	const statusParam = params.get("status");
-	const hasFilterParams =
-		params.has("search") || params.has("status") || (track !== "blind75" && params.has("category"));
-
-	return {
-		hasFilterParams,
-		filters: {
-			search: params.get("search") ?? "",
-			category: track === "blind75" ? "all" : (params.get("category") ?? "all"),
-			status: isTrackStatus(statusParam) ? statusParam : "all",
-		},
-	};
-}
-
-function syncFiltersToUrl(track: Track, filters: TrackFilterValues) {
-	if (typeof window === "undefined") {
-		return;
-	}
-
-	const params = new URLSearchParams(window.location.search);
-	const normalizedSearch = filters.search.trim();
-	if (normalizedSearch.length > 0) {
-		params.set("search", normalizedSearch);
-	} else {
-		params.delete("search");
-	}
-
-	if (track !== "blind75" && filters.category !== "all") {
-		params.set("category", filters.category);
-	} else {
-		params.delete("category");
-	}
-
-	if (filters.status !== "all") {
-		params.set("status", filters.status);
-	} else {
-		params.delete("status");
-	}
-
-	const nextQuery = params.toString();
-	const nextUrl = nextQuery ? `${window.location.pathname}?${nextQuery}` : window.location.pathname;
-	window.history.replaceState(window.history.state, "", nextUrl);
-}
+const STATUS_OPTIONS: { value: Question["status"]; label: string }[] = [
+	{ value: "todo", label: "Todo" },
+	{ value: "in_progress", label: "In progress" },
+	{ value: "done", label: "Done" },
+];
 
 function getUniqueCategories(questions: Question[]) {
 	return Array.from(new Set(questions.map((question) => question.category))).sort();
@@ -91,47 +25,7 @@ function getUniqueCategories(questions: Question[]) {
 
 export function TrackQuestionsPage({ track, questions }: { track: Track; questions: Question[] }) {
 	const dispatch = useAppDispatch();
-	const skipSyncRef = useRef(true);
-	const [{ hasFilterParams: hasUrlFilters, filters: initialUrlFilters }] = useState(() => getUrlFilters(track));
-	const search = useAppSelector((state) => selectSearch(state, track));
-	const category = useAppSelector((state) => selectCategory(state, track));
-	const status = useAppSelector((state) => selectStatus(state, track));
-	const isStoreHydratedFromUrl =
-		hasUrlFilters &&
-		search === initialUrlFilters.search &&
-		category === initialUrlFilters.category &&
-		status === initialUrlFilters.status;
-	const shouldUseInitialUrlFilters = hasUrlFilters && !isStoreHydratedFromUrl;
-	const effectiveSearch = shouldUseInitialUrlFilters ? initialUrlFilters.search : search;
-	const effectiveCategory = shouldUseInitialUrlFilters ? initialUrlFilters.category : category;
-	const effectiveStatus = shouldUseInitialUrlFilters ? initialUrlFilters.status : status;
-
-	useEffect(() => {
-		skipSyncRef.current = true;
-
-		if (hasUrlFilters && !isStoreHydratedFromUrl) {
-			dispatch(
-				hydrateFiltersFromQuery({
-					track,
-					search: initialUrlFilters.search,
-					category: initialUrlFilters.category,
-					status: initialUrlFilters.status,
-				}),
-			);
-			return;
-		}
-
-		skipSyncRef.current = false;
-	}, [dispatch, hasUrlFilters, initialUrlFilters, isStoreHydratedFromUrl, track]);
-
-	useEffect(() => {
-		if (skipSyncRef.current) {
-			skipSyncRef.current = false;
-			return;
-		}
-
-		syncFiltersToUrl(track, { search: effectiveSearch, category: effectiveCategory, status: effectiveStatus });
-	}, [effectiveCategory, effectiveSearch, effectiveStatus, track]);
+	const { effectiveSearch, effectiveCategory, effectiveStatus } = useFilterSync(track);
 
 	const categories = useMemo(() => getUniqueCategories(questions), [questions]);
 
@@ -142,8 +36,7 @@ export function TrackQuestionsPage({ track, questions }: { track: Track; questio
 				String(question.questionNumber).startsWith(effectiveSearch.trim()) ||
 				question.title.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
 				question.tags.some((tag) => tag.toLowerCase().includes(effectiveSearch.toLowerCase()));
-			const matchesCategory =
-				track === "blind75" || effectiveCategory === "all" || question.category === effectiveCategory;
+			const matchesCategory = track === "blind75" || effectiveCategory === "all" || question.category === effectiveCategory;
 			const matchesStatus = effectiveStatus === "all" || question.status === effectiveStatus;
 
 			return matchesSearch && matchesCategory && matchesStatus;
@@ -166,12 +59,7 @@ export function TrackQuestionsPage({ track, questions }: { track: Track; questio
 				</p>
 				<div className="flex min-w-0 max-w-full basis-full shrink-0 flex-wrap items-end gap-3 min-[1330px]:ml-auto min-[1330px]:basis-auto">
 					{track !== "blind75" && (
-						<FormControl
-							size="small"
-							fullWidth
-							data-testid="filter-category"
-							className="order-1 min-[1330px]:order-2 sm:w-auto sm:min-w-35"
-						>
+						<FormControl size="small" fullWidth data-testid="filter-category" className="order-1 min-[1330px]:order-2 sm:w-auto sm:min-w-35">
 							<InputLabel id="category-label">Category</InputLabel>
 							<Select
 								labelId="category-label"
@@ -188,38 +76,25 @@ export function TrackQuestionsPage({ track, questions }: { track: Track; questio
 							</Select>
 						</FormControl>
 					)}
-					<FormControl
-						size="small"
-						fullWidth
-						data-testid="filter-status"
-						className="order-2 min-[1330px]:order-3 sm:w-auto sm:min-w-30"
-					>
+					<FormControl size="small" fullWidth data-testid="filter-status" className="order-2 min-[1330px]:order-3 sm:w-auto sm:min-w-30">
 						<InputLabel id="status-label">Status</InputLabel>
 						<Select
 							labelId="status-label"
 							label="Status"
 							value={effectiveStatus}
-							onChange={(event) =>
-								dispatch(
-									setStatus({
-										track,
-										value: event.target.value as Question["status"] | "all",
-									}),
-								)
-							}
+							onChange={(event) => {
+								const value = event.target.value;
+								if (value === "all" || value === "todo" || value === "in_progress" || value === "done") {
+									dispatch(setStatus({ track, value }));
+								}
+							}}
 						>
 							<MenuItem value="all">All</MenuItem>
-							{[
-								<MenuItem key="todo" value="todo">
-									Todo
-								</MenuItem>,
-								<MenuItem key="in_progress" value="in_progress">
-									In progress
-								</MenuItem>,
-								<MenuItem key="done" value="done">
-									Done
-								</MenuItem>,
-							]}
+							{STATUS_OPTIONS.map(({ value, label }) => (
+								<MenuItem key={value} value={value}>
+									{label}
+								</MenuItem>
+							))}
 						</Select>
 					</FormControl>
 					<div className="group order-3 min-w-0 max-w-65 basis-full min-[1330px]:order-1 min-[1330px]:max-w-none min-[1330px]:basis-auto min-[1330px]:min-w-45">

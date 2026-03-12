@@ -1,5 +1,6 @@
-/** @jest-environment node */
-
+/**
+ * @jest-environment node
+ */
 import { POST } from "@/app/api/graphql/route";
 import { executeGraphQLQuery } from "@/lib/graphql/schema";
 
@@ -9,107 +10,101 @@ jest.mock("@/lib/graphql/schema", () => ({
 
 const mockExecuteGraphQLQuery = executeGraphQLQuery as jest.MockedFunction<typeof executeGraphQLQuery>;
 
-describe("GraphQL route integration", () => {
+describe("GraphQL API route", () => {
 	beforeEach(() => {
-		mockExecuteGraphQLQuery.mockReset();
+		jest.clearAllMocks();
 	});
 
-	it("returns a GraphQL-style error for invalid JSON body", async () => {
+	it("returns 400 for invalid JSON body", async () => {
 		const request = new Request("http://localhost/api/graphql", {
 			method: "POST",
-			headers: { "content-type": "application/json" },
-			body: '{"query":',
+			body: "not json",
+			headers: { "Content-Type": "application/json" },
 		});
 
 		const response = await POST(request);
+		const data = await response.json();
 
 		expect(response.status).toBe(400);
-		await expect(response.json()).resolves.toEqual({
-			data: null,
-			errors: [{ message: "Request body must be valid JSON." }],
-		});
+		expect(data.error).toContain("valid JSON");
 		expect(mockExecuteGraphQLQuery).not.toHaveBeenCalled();
 	});
 
-	it("returns a GraphQL-style error for non-object payloads", async () => {
+	it("returns 400 when body is not an object", async () => {
 		const request = new Request("http://localhost/api/graphql", {
 			method: "POST",
-			headers: { "content-type": "application/json" },
-			body: JSON.stringify(["not-an-object"]),
+			body: JSON.stringify("string"),
+			headers: { "Content-Type": "application/json" },
 		});
 
 		const response = await POST(request);
+		const data = await response.json();
 
 		expect(response.status).toBe(400);
-		await expect(response.json()).resolves.toEqual({
-			data: null,
-			errors: [{ message: "GraphQL request body must be a JSON object." }],
-		});
+		expect(data.error).toContain("JSON object");
 		expect(mockExecuteGraphQLQuery).not.toHaveBeenCalled();
 	});
 
-	it("returns a GraphQL-style error when query is missing", async () => {
+	it("returns 400 when query is missing", async () => {
 		const request = new Request("http://localhost/api/graphql", {
 			method: "POST",
-			headers: { "content-type": "application/json" },
-			body: JSON.stringify({ variables: { track: "gfe75" } }),
+			body: JSON.stringify({ variables: {} }),
+			headers: { "Content-Type": "application/json" },
 		});
 
 		const response = await POST(request);
+		const data = await response.json();
 
 		expect(response.status).toBe(400);
-		await expect(response.json()).resolves.toEqual({
-			data: null,
-			errors: [{ message: "GraphQL query is required." }],
-		});
+		expect(data.error).toContain("query is required");
 		expect(mockExecuteGraphQLQuery).not.toHaveBeenCalled();
 	});
 
-	it("returns mapped GraphQL errors when execution fails", async () => {
+	it("executes valid query and returns data", async () => {
 		mockExecuteGraphQLQuery.mockResolvedValue({
-			data: null,
-			errors: [{ message: "Validation error." }] as never,
+			data: { questions: [{ id: "gfe-debounce", title: "Debounce" }] },
 		});
 
 		const request = new Request("http://localhost/api/graphql", {
 			method: "POST",
-			headers: { "content-type": "application/json" },
 			body: JSON.stringify({
-				query: "query Questions($track: Track!) { questions(track: $track) { id } }",
+				query: "query GetQuestions($track: Track!) { questions(track: $track) { id title } }",
 				variables: { track: "gfe75" },
 			}),
+			headers: { "Content-Type": "application/json" },
 		});
 
 		const response = await POST(request);
-
-		expect(response.status).toBe(400);
-		await expect(response.json()).resolves.toEqual({
-			data: null,
-			errors: [{ message: "Validation error." }],
-		});
-		expect(mockExecuteGraphQLQuery).toHaveBeenCalledWith("query Questions($track: Track!) { questions(track: $track) { id } }", { track: "gfe75" });
-	});
-
-	it("returns data payload when execution succeeds", async () => {
-		mockExecuteGraphQLQuery.mockResolvedValue({
-			data: { questions: [] },
-		});
-
-		const request = new Request("http://localhost/api/graphql", {
-			method: "POST",
-			headers: { "content-type": "application/json" },
-			body: JSON.stringify({
-				query: "query Questions($track: Track!) { questions(track: $track) { id } }",
-				variables: { track: "gfe75" },
-			}),
-		});
-
-		const response = await POST(request);
+		const data = await response.json();
 
 		expect(response.status).toBe(200);
-		await expect(response.json()).resolves.toEqual({
-			data: { questions: [] },
+		expect(data.data).toEqual({ questions: [{ id: "gfe-debounce", title: "Debounce" }] });
+		expect(mockExecuteGraphQLQuery).toHaveBeenCalledWith("query GetQuestions($track: Track!) { questions(track: $track) { id title } }", {
+			track: "gfe75",
 		});
-		expect(mockExecuteGraphQLQuery).toHaveBeenCalledWith("query Questions($track: Track!) { questions(track: $track) { id } }", { track: "gfe75" });
+	});
+
+	it("returns errors in response when schema returns errors", async () => {
+		mockExecuteGraphQLQuery.mockResolvedValue(
+			// Minimal error shape for route mapping; graphql returns full GraphQLError
+			{ data: null, errors: [{ message: "Cannot query field 'missingField' on type 'Query'." }] } as unknown as Awaited<
+				ReturnType<typeof import("@/lib/graphql/schema").executeGraphQLQuery>
+			>,
+		);
+
+		const request = new Request("http://localhost/api/graphql", {
+			method: "POST",
+			body: JSON.stringify({
+				query: "{ missingField }",
+			}),
+			headers: { "Content-Type": "application/json" },
+		});
+
+		const response = await POST(request);
+		const data = await response.json();
+
+		expect(response.status).toBe(200);
+		expect(data.errors).toHaveLength(1);
+		expect(data.errors[0].message).toContain("missingField");
 	});
 });

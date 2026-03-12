@@ -119,12 +119,11 @@ Notes:
 - Focus on functionality, not styling; no custom CSS is required.
 - Markup changes are allowed (ids, data attributes, tags) as long as visuals remain the same.
 - User experience improvements are bonus interview credit.`,
-		approach: `Use a Redux Toolkit slice (todoDemoSlice) to manage task items and incremental ids.
+		approach: `Use GraphQL + RTK Query for tasks. Data flows through GraphQL as if from a DB; resolvers use in-memory storage (swap for a real DB when needed).
 
 Implementation details:
-- Keep the task input controlled in TodoDemo.
-- Dispatch addTask on submit and removeTask on per-item deletes.
-- Clear the input after successful adds and keep autoFocus on the input for fast entry.
+- TodoDemo uses useTasksQuery, useAddTaskMutation, useRemoveTaskMutation, useClearTasksMutation.
+- Keep the task input controlled in TodoDemo; clear after successful adds and keep autoFocus for fast entry.
 - Provide guardrails with disabled empty-submit and disabled clear-all when there are no tasks.`,
 		complexity: "Time: O(n) for delete, Space: O(n).",
 		tags: ["forms", "redux-toolkit", "list-rendering"],
@@ -236,8 +235,8 @@ Core scope:
 Comments and sharing are out of core scope.`,
 		cardSummary: "Design a Facebook-style feed with infinite scroll, reactions, and post creation.",
 		approach: `Architecture and boundaries:
-- The runnable solution keeps orchestration in one controller-style component (NewsFeedDemo) and isolates "server" behavior in async helpers (fetchFeedPage, createPost, persistReaction).
-- A small in-memory dataset (dbPosts) simulates backend reads/writes, latency, and occasional failures so UX/error paths can be demonstrated.
+- The runnable solution keeps orchestration in one controller-style component (NewsFeedDemo) and uses GraphQL + RTK Query for data.
+- In-memory resolvers handle feedPage, createPost, reactToPost; data flows through GraphQL as if from a DB (swap for a real DB when needed).
 
 Client state model:
 - Feed state tracks posts, nextCursor, loading, submitting, and error, plus composer fields for post body/image URL.
@@ -409,8 +408,7 @@ Interview-ready extensions:
 		solutionType: "code_and_tests",
 		status: "todo",
 		summary: "TODO: Solve Function.prototype.call.",
-		cardSummary:
-			"Implement the Function.prototype.call() function that calls the function with a given `this` value and provided arguments",
+		cardSummary: "Implement the Function.prototype.call() function that calls the function with a given `this` value and provided arguments",
 		approach: "TODO",
 		complexity: "TODO",
 		tags: [],
@@ -444,8 +442,7 @@ Interview-ready extensions:
 		solutionType: "code_and_tests",
 		status: "todo",
 		summary: "TODO: Solve Map Async Limit.",
-		cardSummary:
-			"Implement a function that maps an array of items with an asynchronous mapping function while not exceeding the concurrency limit",
+		cardSummary: "Implement a function that maps an array of items with an asynchronous mapping function while not exceeding the concurrency limit",
 		approach: "TODO",
 		complexity: "TODO",
 		tags: [],
@@ -496,8 +493,7 @@ Interview-ready extensions:
 		solutionType: "code_and_tests",
 		status: "todo",
 		summary: "TODO: Solve Deep Omit.",
-		cardSummary:
-			"Implement a function that removes specified keys and their corresponding values from an object, including nested objects or arrays",
+		cardSummary: "Implement a function that removes specified keys and their corresponding values from an object, including nested objects or arrays",
 		approach: "TODO",
 		complexity: "TODO",
 		tags: [],
@@ -1064,8 +1060,7 @@ Interview-ready extensions:
 		solutionType: "ui_demo",
 		status: "todo",
 		summary: "TODO: Solve Traffic Light.",
-		cardSummary:
-			"Build a traffic light where the lights switch from green to yellow to red after predetermined intervals and loop indefinitely",
+		cardSummary: "Build a traffic light where the lights switch from green to yellow to red after predetermined intervals and loop indefinitely",
 		approach: "TODO",
 		complexity: "TODO",
 		tags: [],

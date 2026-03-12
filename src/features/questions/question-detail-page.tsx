@@ -2,19 +2,24 @@
 
 import Link from "next/link";
 import type { Question } from "@/content/questions";
-import { DifficultyPill, SurfacePanel } from "@/components/ui/tailwind-primitives";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { DifficultyPill, PRIMARY_BUTTON_CLASSES, SurfacePanel } from "@/components/ui/tailwind-primitives";
 import { QUESTION_UI_CLASSES, SourcePromptLink } from "@/features/questions/question-ui";
 import { getSolutionRenderer } from "@/features/questions/solution-registry";
 
 function renderSolution(question: Question) {
 	const SolutionRenderer = getSolutionRenderer(question);
 	if (SolutionRenderer) {
-		return <SolutionRenderer />;
+		return (
+			<ErrorBoundary>
+				<SolutionRenderer />
+			</ErrorBoundary>
+		);
 	}
 
 	if (question.solutionType === "algo_visualizer") {
 		return (
-			<div className={`rounded-md bg-slate-50 p-3 text-sm ${QUESTION_UI_CLASSES.bodyText}`}>
+			<div className={`rounded-md bg-card-bg p-3 text-sm ${QUESTION_UI_CLASSES.bodyText}`}>
 				<p>Interactive algorithm walkthrough is pending for this question.</p>
 			</div>
 		);
@@ -30,12 +35,12 @@ function renderSolution(question: Question) {
 	}
 
 	return (
-		<div className={`rounded-md bg-slate-50 p-3 text-sm ${QUESTION_UI_CLASSES.bodyText}`}>
+		<div className={`rounded-md bg-card-bg p-3 text-sm ${QUESTION_UI_CLASSES.bodyText}`}>
 			<p>
 				Code-first solution is implemented with unit tests. Open
-				<code className="mx-1 rounded bg-slate-200 px-1 py-0.5">src/solutions</code>
+				<code className="mx-1 rounded bg-surface px-1 py-0.5">src/solutions</code>
 				and
-				<code className="mx-1 rounded bg-slate-200 px-1 py-0.5">src/solutions/**/*.test.ts</code>
+				<code className="mx-1 rounded bg-surface px-1 py-0.5">src/solutions/**/*.test.ts</code>
 				for details.
 			</p>
 		</div>
@@ -68,11 +73,7 @@ export function QuestionDetailPage({ question }: { question: Question }) {
 						#{question.questionNumber} {question.title}
 					</h2>
 				</div>
-				<Link
-					href={`/${question.track}`}
-					data-testid="back-to-list-link"
-					className="shrink-0 rounded-md bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-400"
-				>
+				<Link href={`/${question.track}`} data-testid="back-to-list-link" className={`shrink-0 ${PRIMARY_BUTTON_CLASSES}`}>
 					Back to list
 				</Link>
 			</div>

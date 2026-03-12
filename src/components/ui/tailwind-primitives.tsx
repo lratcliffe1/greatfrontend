@@ -14,6 +14,14 @@ const PRIMITIVE_CLASSES = {
 	mutedText: "text-sm [color:var(--muted)]",
 } as const;
 
+/** Shared primary button/link styling for use with AppButton or Link */
+export const PRIMARY_BUTTON_CLASSES =
+	"rounded-md bg-teal-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-400";
+
+/** Compact variant for nav links */
+export const PRIMARY_BUTTON_SM_CLASSES =
+	"rounded-md bg-teal-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-400";
+
 const BUTTON_VARIANT_CLASSES = {
 	primary:
 		"bg-teal-600 text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:border disabled:border-card-border disabled:[background:var(--card-bg)] disabled:text-muted disabled:hover:[background:var(--card-bg)] disabled:hover:text-muted dark:bg-teal-500 dark:hover:bg-teal-400 dark:disabled:[background:var(--card-bg)]",

@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { AppButton } from "@/components/ui/tailwind-primitives";
-
-type ReactionKey = "like" | "haha" | "wow";
+import type { FeedPost, ReactionKey } from "@/lib/graphql/api";
+import { useCreatePostMutation, useFeedPageQuery, useLazyFeedPageQuery, useReactToPostMutation } from "@/lib/graphql/api";
 
 const REACTION_KEYS: ReactionKey[] = ["like", "haha", "wow"];
 const REACTION_LABELS: Record<ReactionKey, string> = {
@@ -11,107 +11,6 @@ const REACTION_LABELS: Record<ReactionKey, string> = {
 	haha: "Haha",
 	wow: "Wow",
 };
-
-type FeedPost = {
-	id: string;
-	author: string;
-	content: string;
-	imageUrl?: string;
-	createdAt: number;
-	reactions: Record<ReactionKey, number>;
-	reactionByMe: ReactionKey | null;
-};
-
-type FeedPage = {
-	posts: FeedPost[];
-	nextCursor: string | null;
-};
-
-const PAGE_SIZE = 4;
-
-function createSeedPost(index: number): FeedPost {
-	return {
-		id: `post-${index + 1}`,
-		author: index % 2 === 0 ? "Liam" : "Frontend Friend",
-		content: `Sample post ${index + 1} in the mock feed. This demonstrates cursor pagination, feed composition, and optimistic reactions.`,
-		imageUrl: index % 4 === 0 ? `https://picsum.photos/seed/news-feed-${index + 1}/720/420` : undefined,
-		createdAt: Date.now() - index * 1000 * 60 * 12,
-		reactions: {
-			like: Math.floor(Math.random() * 40),
-			haha: Math.floor(Math.random() * 20),
-			wow: Math.floor(Math.random() * 10),
-		},
-		reactionByMe: null,
-	};
-}
-
-let dbPosts: FeedPost[] = Array.from({ length: 30 }).map((_, index) => createSeedPost(index));
-
-function wait(ms: number) {
-	return new Promise((resolve) => {
-		setTimeout(resolve, ms);
-	});
-}
-
-function applyReactionTransition(post: FeedPost, nextReaction: ReactionKey | null): FeedPost {
-	const previousReaction = post.reactionByMe;
-	const nextReactions = { ...post.reactions };
-
-	if (previousReaction) {
-		nextReactions[previousReaction] = Math.max(0, nextReactions[previousReaction] - 1);
-	}
-	if (nextReaction) {
-		nextReactions[nextReaction] += 1;
-	}
-
-	return {
-		...post,
-		reactions: nextReactions,
-		reactionByMe: nextReaction,
-	};
-}
-
-async function fetchFeedPage(cursor: string | null): Promise<FeedPage> {
-	await wait(350);
-
-	let start = 0;
-	if (cursor) {
-		const cursorIndex = dbPosts.findIndex((post) => post.id === cursor);
-		start = cursorIndex >= 0 ? cursorIndex + 1 : dbPosts.length;
-	}
-
-	const posts = dbPosts.slice(start, start + PAGE_SIZE);
-	const lastVisiblePost = posts[posts.length - 1] ?? null;
-	const nextCursor = start + posts.length < dbPosts.length && lastVisiblePost ? lastVisiblePost.id : null;
-	return { posts, nextCursor };
-}
-
-async function createPost(content: string, imageUrl?: string): Promise<FeedPost> {
-	await wait(250);
-	const newPost: FeedPost = {
-		id: `post-${Date.now()}`,
-		author: "Liam",
-		content,
-		imageUrl,
-		createdAt: Date.now(),
-		reactions: { like: 0, haha: 0, wow: 0 },
-		reactionByMe: null,
-	};
-	dbPosts = [newPost, ...dbPosts];
-	return newPost;
-}
-
-async function persistReaction(postId: string, nextReaction: ReactionKey | null) {
-	await wait(220);
-	if (Math.random() < 0.15) {
-		throw new Error("Reaction failed on server. Try again.");
-	}
-
-	dbPosts = dbPosts.map((post) => {
-		if (post.id !== postId) return post;
-		return applyReactionTransition(post, nextReaction);
-	});
-}
 
 function formatRelativeTime(timestamp: number) {
 	const seconds = Math.round((timestamp - Date.now()) / 1000);
@@ -128,94 +27,109 @@ function getTotalReactions(post: FeedPost) {
 	return REACTION_KEYS.reduce((total, key) => total + post.reactions[key], 0);
 }
 
+function applyReactionTransition(post: FeedPost, nextReaction: ReactionKey | null): FeedPost {
+	const previousReaction = post.reactionByMe;
+	const nextReactions = { ...post.reactions };
+	if (previousReaction) {
+		nextReactions[previousReaction] = Math.max(0, nextReactions[previousReaction] - 1);
+	}
+	if (nextReaction) {
+		nextReactions[nextReaction] += 1;
+	}
+	return { ...post, reactions: nextReactions, reactionByMe: nextReaction };
+}
+
 export function NewsFeedDemo() {
 	const [posts, setPosts] = useState<FeedPost[]>([]);
 	const [nextCursor, setNextCursor] = useState<string | null>(null);
-	const [loading, setLoading] = useState(false);
-	const [submitting, setSubmitting] = useState(false);
-	const [error, setError] = useState<string | null>(null);
 	const [newPostContent, setNewPostContent] = useState("");
 	const [newPostImageUrl, setNewPostImageUrl] = useState("");
-	const sentinelRef = useRef<HTMLDivElement | null>(null);
-	const loadingRef = useRef(false);
+	const [error, setError] = useState<string | null>(null);
+	const sentinelRef = useRef<HTMLDivElement>(null);
+	const loadingMoreRef = useRef(false);
 
-	const hasMore = useMemo(() => nextCursor !== null, [nextCursor]);
+	const { data: initialPage, isLoading: isLoadingInitial } = useFeedPageQuery({ cursor: undefined });
+	const [fetchMore, { data: morePage, isLoading: isLoadingMore }] = useLazyFeedPageQuery();
+	const [createPost, { isLoading: isSubmitting }] = useCreatePostMutation();
+	const [reactToPost] = useReactToPostMutation();
 
-	const loadPage = useCallback(async (cursor: string | null) => {
-		if (loadingRef.current) return;
-		loadingRef.current = true;
-		setLoading(true);
-		try {
-			const page = await fetchFeedPage(cursor);
-			setPosts((previous) =>
-				cursor ? [...previous, ...page.posts.filter((nextPost) => !previous.some((previousPost) => previousPost.id === nextPost.id))] : page.posts,
-			);
-			setNextCursor(page.nextCursor);
-			setError(null);
-		} catch {
-			setError("Failed to fetch feed.");
-		} finally {
-			loadingRef.current = false;
-			setLoading(false);
-		}
-	}, []);
+	const hasMore = nextCursor !== null;
 
 	useEffect(() => {
-		void loadPage(null);
-	}, [loadPage]);
+		if (initialPage) {
+			startTransition(() => {
+				setPosts(initialPage.posts);
+				setNextCursor(initialPage.nextCursor);
+			});
+		}
+	}, [initialPage]);
+
+	useEffect(() => {
+		if (morePage) {
+			startTransition(() => {
+				setPosts((prev) => [...prev, ...morePage.posts.filter((p) => !prev.some((existing) => existing.id === p.id))]);
+				setNextCursor(morePage.nextCursor);
+				loadingMoreRef.current = false;
+			});
+		}
+	}, [morePage]);
+
+	const loadMore = useCallback(() => {
+		if (!nextCursor || loadingMoreRef.current) return;
+		loadingMoreRef.current = true;
+		fetchMore({ cursor: nextCursor });
+	}, [nextCursor, fetchMore]);
 
 	useEffect(() => {
 		const node = sentinelRef.current;
 		if (!node || !hasMore) return;
-
 		const observer = new IntersectionObserver(
 			(entries) => {
-				if (entries.some((entry) => entry.isIntersecting) && nextCursor && !loadingRef.current) {
-					void loadPage(nextCursor);
-				}
+				if (entries.some((e) => e.isIntersecting)) loadMore();
 			},
 			{ rootMargin: "100% 0px" },
 		);
-
 		observer.observe(node);
 		return () => observer.disconnect();
-	}, [hasMore, loadPage, nextCursor]);
+	}, [hasMore, loadMore]);
 
-	async function onCreatePost(event: React.ChangeEvent<HTMLFormElement>) {
+	async function onCreatePost(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 		const content = newPostContent.trim();
 		const imageUrl = newPostImageUrl.trim();
 		if (!content && !imageUrl) return;
-
-		setSubmitting(true);
+		setError(null);
 		try {
-			const created = await createPost(content, imageUrl || undefined);
-			setPosts((previous) => [created, ...previous]);
+			const created = await createPost({
+				content: content || undefined,
+				imageUrl: imageUrl || undefined,
+			}).unwrap();
+			setPosts((prev) => [created, ...prev]);
 			setNewPostContent("");
 			setNewPostImageUrl("");
-			setError(null);
 		} catch {
 			setError("Failed to create post.");
-		} finally {
-			setSubmitting(false);
 		}
 	}
 
-	async function reactToPost(postId: string, selectedReaction: ReactionKey) {
-		const current = posts.find((post) => post.id === postId);
+	async function onReactToPost(postId: string, selectedReaction: ReactionKey) {
+		const current = posts.find((p) => p.id === postId);
 		if (!current) return;
 		const previousReaction = current.reactionByMe;
 		const nextReaction = previousReaction === selectedReaction ? null : selectedReaction;
 
-		setPosts((previous) => previous.map((post) => (post.id === postId ? applyReactionTransition(post, nextReaction) : post)));
-
+		setPosts((prev) => prev.map((p) => (p.id === postId ? applyReactionTransition(p, nextReaction) : p)));
+		setError(null);
 		try {
-			await persistReaction(postId, nextReaction);
-			setError(null);
+			await reactToPost({ postId, reaction: nextReaction }).unwrap();
 		} catch (caught) {
-			setPosts((previous) => previous.map((post) => (post.id === postId ? applyReactionTransition(post, previousReaction) : post)));
+			setPosts((prev) => prev.map((p) => (p.id === postId ? applyReactionTransition(p, previousReaction) : p)));
 			setError(caught instanceof Error ? caught.message : "Failed to react.");
 		}
+	}
+
+	if (isLoadingInitial) {
+		return <p className="text-sm text-muted">Loading feed...</p>;
 	}
 
 	return (
@@ -227,20 +141,20 @@ export function NewsFeedDemo() {
 				<textarea
 					id="new-post"
 					value={newPostContent}
-					onChange={(event) => setNewPostContent(event.target.value)}
+					onChange={(e) => setNewPostContent(e.target.value)}
 					className="min-h-24 w-full rounded-md border border-card-border px-3 py-2 [background:var(--input-bg)] text-foreground"
 					placeholder="Share something..."
 				/>
 				<input
 					id="new-post-image"
 					value={newPostImageUrl}
-					onChange={(event) => setNewPostImageUrl(event.target.value)}
+					onChange={(e) => setNewPostImageUrl(e.target.value)}
 					className="w-full rounded-md border border-card-border px-3 py-2 text-sm [background:var(--input-bg)] text-foreground"
 					placeholder="Optional image URL"
 				/>
 				<div className="flex flex-wrap items-center gap-2">
-					<AppButton type="submit" disabled={submitting || (!newPostContent.trim() && !newPostImageUrl.trim())}>
-						{submitting ? "Publishing..." : "Publish"}
+					<AppButton type="submit" disabled={isSubmitting || (!newPostContent.trim() && !newPostImageUrl.trim())}>
+						{isSubmitting ? "Publishing..." : "Publish"}
 					</AppButton>
 					<p className="text-xs text-muted">Supports text-only and text+image posts.</p>
 				</div>
@@ -255,7 +169,6 @@ export function NewsFeedDemo() {
 			<div role="feed" className="space-y-3">
 				{posts.map((post) => {
 					const totalReactions = getTotalReactions(post);
-
 					return (
 						<article
 							key={post.id}
@@ -288,7 +201,7 @@ export function NewsFeedDemo() {
 											type="button"
 											size="xs"
 											aria-pressed={active}
-											onClick={() => reactToPost(post.id, reactionKey)}
+											onClick={() => onReactToPost(post.id, reactionKey)}
 											className={active ? "ring-2 ring-teal-300/60 dark:ring-teal-400/60" : undefined}
 										>
 											{REACTION_LABELS[reactionKey]} • {post.reactions[reactionKey]}
@@ -303,8 +216,8 @@ export function NewsFeedDemo() {
 			</div>
 
 			<div ref={sentinelRef} className="h-8" />
-			{loading && <p className="text-sm text-muted">Loading more posts...</p>}
-			{!hasMore && !loading && <p className="text-sm text-muted">No more posts in the mock feed.</p>}
+			{isLoadingMore && <p className="text-sm text-muted">Loading more posts...</p>}
+			{!hasMore && !isLoadingMore && posts.length > 0 && <p className="text-sm text-muted">No more posts in the mock feed.</p>}
 		</div>
 	);
 }
