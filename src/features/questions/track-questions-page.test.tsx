@@ -27,9 +27,12 @@ describe("TrackQuestionsPage", () => {
 		const searchInput = screen.getByLabelText("Search questions");
 		await user.type(searchInput, "Debounce");
 
-		expect(screen.getByText(/Debounce/)).toBeInTheDocument();
-		expect(screen.queryByText(/Array\.prototype\.reduce/)).not.toBeInTheDocument();
-		expect(screen.getByTestId("track-progress")).toHaveTextContent("1/1 complete");
+		// Search is debounced; wait for filter to apply
+		await waitFor(() => {
+			expect(screen.getByText(/Debounce/)).toBeInTheDocument();
+			expect(screen.queryByText(/Array\.prototype\.reduce/)).not.toBeInTheDocument();
+			expect(screen.getByTestId("track-progress")).toHaveTextContent("1/1 complete");
+		});
 	});
 
 	it("hydrates filters from URL params", () => {
@@ -52,8 +55,12 @@ describe("TrackQuestionsPage", () => {
 		const searchInput = screen.getByLabelText("Search questions");
 		await user.type(searchInput, "Debounce");
 
-		await waitFor(() => {
-			expect(window.location.search).toContain("searchGfe=Debounce");
-		});
+		// Search is debounced; URL updates after debounce
+		await waitFor(
+			() => {
+				expect(window.location.search).toContain("searchGfe=Debounce");
+			},
+			{ timeout: 500 },
+		);
 	});
 });

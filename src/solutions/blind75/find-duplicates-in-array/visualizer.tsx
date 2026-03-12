@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { startTransition, useMemo, useState } from "react";
 
 import { AppButton, EditableFieldPrompt } from "@/components/ui/tailwind-primitives";
 import { StepVisualizerLayout, type CodeLine } from "@/components/visualizer/step-visualizer-layout";
@@ -125,8 +125,11 @@ export function FindDuplicatesInArrayVisualizer() {
 						type="button"
 						onClick={() => {
 							if (parsedInput.error) return;
-							setAppliedNumbers(parsedInput.numbers);
-							setStepIndex(0);
+							// Defer so the click can paint first; step computation runs in transition (better INP).
+							startTransition(() => {
+								setAppliedNumbers(parsedInput.numbers);
+								setStepIndex(0);
+							});
 						}}
 						disabled={Boolean(parsedInput.error)}
 					>

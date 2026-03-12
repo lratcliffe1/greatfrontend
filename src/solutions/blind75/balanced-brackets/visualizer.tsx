@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 
 import { AppButton, EditableFieldPrompt } from "@/components/ui/tailwind-primitives";
 import { StepVisualizerLayout, type CodeLine } from "@/components/visualizer/step-visualizer-layout";
@@ -106,9 +106,12 @@ export function BalancedBracketsVisualizer() {
 						type="button"
 						onClick={() => {
 							if (inputError) return;
-							setSteps(getBalancedBracketSteps(input));
-							setStepIndex(0);
-							flashExecutionTrace();
+							// Defer heavy step computation so the click can paint first (better INP).
+							startTransition(() => {
+								setSteps(getBalancedBracketSteps(input));
+								setStepIndex(0);
+								flashExecutionTrace();
+							});
 						}}
 						disabled={Boolean(inputError)}
 					>

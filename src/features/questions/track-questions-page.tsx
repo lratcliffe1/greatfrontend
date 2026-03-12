@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 
 import type { Question, Track } from "@/content/questions";
@@ -12,6 +12,8 @@ import { TrackTabs } from "@/components/track-tabs";
 import { getTrackLabel } from "@/lib/tracks";
 import { QUESTION_UI_CLASSES, SourcePromptLink } from "@/features/questions/question-ui";
 import { useFilterSync } from "@/features/questions/use-url-filters";
+
+const SEARCH_DEBOUNCE_MS = 150;
 
 const STATUS_OPTIONS: { value: Question["status"]; label: string }[] = [
 	{ value: "todo", label: "Todo" },
@@ -26,6 +28,29 @@ function getUniqueCategories(questions: Question[]) {
 export function TrackQuestionsPage({ track, questions }: { track: Track; questions: Question[] }) {
 	const dispatch = useAppDispatch();
 	const { effectiveSearch, effectiveCategory, effectiveStatus } = useFilterSync(track);
+
+	// Local state for search input so typing feels instant (good INP); debounce Redux updates.
+	const [searchInput, setSearchInput] = useState(effectiveSearch);
+	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	useEffect(() => {
+		setSearchInput(effectiveSearch);
+	}, [effectiveSearch]);
+
+	useEffect(() => {
+		return () => {
+			if (debounceRef.current) clearTimeout(debounceRef.current);
+		};
+	}, []);
+
+	const handleSearchChange = (value: string) => {
+		setSearchInput(value);
+		if (debounceRef.current) clearTimeout(debounceRef.current);
+		debounceRef.current = setTimeout(() => {
+			debounceRef.current = null;
+			dispatch(setSearch({ track, value }));
+		}, SEARCH_DEBOUNCE_MS);
+	};
 
 	const categories = useMemo(() => getUniqueCategories(questions), [questions]);
 
@@ -65,7 +90,11 @@ export function TrackQuestionsPage({ track, questions }: { track: Track; questio
 								labelId="category-label"
 								label="Category"
 								value={effectiveCategory}
-								onChange={(event) => dispatch(setCategory({ track, value: String(event.target.value) }))}
+								onChange={(event) => {
+									startTransition(() => {
+										dispatch(setCategory({ track, value: String(event.target.value) }));
+									});
+								}}
 							>
 								<MenuItem value="all">All</MenuItem>
 								{categories.map((cat) => (
@@ -85,7 +114,9 @@ export function TrackQuestionsPage({ track, questions }: { track: Track; questio
 							onChange={(event) => {
 								const value = event.target.value;
 								if (value === "all" || value === "todo" || value === "in_progress" || value === "done") {
-									dispatch(setStatus({ track, value }));
+									startTransition(() => {
+										dispatch(setStatus({ track, value }));
+									});
 								}
 							}}
 						>
@@ -110,8 +141,8 @@ export function TrackQuestionsPage({ track, questions }: { track: Track; questio
 							id="search-questions"
 							type="search"
 							data-testid="filter-search"
-							value={effectiveSearch}
-							onChange={(event) => dispatch(setSearch({ track, value: event.target.value }))}
+							value={searchInput}
+							onChange={(event) => handleSearchChange(event.target.value)}
 							className="w-full min-w-0 max-w-full rounded border border-card-border bg-background px-3 py-2 text-xs text-foreground focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 dark:focus:border-teal-500 dark:focus:ring-teal-500 sm:text-sm"
 						/>
 					</div>
