@@ -1,14 +1,7 @@
 import userEvent from "@testing-library/user-event";
-import { render, screen, waitFor } from "@/test-utils";
+import { render, screen, waitFor, within } from "@/test-utils";
 import { TrackQuestionsPage } from "@/features/questions/track-questions-page";
-import { useQuestionsQuery } from "@/lib/graphql/api";
 import type { Question } from "@/content/questions";
-
-const mockUseQuestionsQuery = jest.fn();
-jest.mock("@/lib/graphql/api", () => ({
-	...jest.requireActual("@/lib/graphql/api"),
-	useQuestionsQuery: (...args: unknown[]) => mockUseQuestionsQuery(...args),
-}));
 
 const mockQuestions: Question[] = [
 	{
@@ -50,105 +43,23 @@ const mockQuestions: Question[] = [
 describe("TrackQuestionsPage", () => {
 	beforeEach(() => {
 		window.history.replaceState(window.history.state, "", "/gfe75");
-
-		mockUseQuestionsQuery.mockReturnValue({
-			data: mockQuestions,
-			error: undefined,
-			isLoading: false,
-			isFetching: false,
-			isSuccess: true,
-			isError: false,
-			refetch: jest.fn(),
-			currentData: mockQuestions,
-			dataUpdatedAt: 0,
-			errorUpdatedAt: 0,
-			failureCount: 0,
-			failureReason: undefined,
-			isUninitialized: false,
-			status: "fulfilled",
-			requestId: "",
-			startedTimeStamp: 0,
-			fulfilledTimeStamp: 0,
-			isLoadingError: false,
-			isRefetchError: false,
-			originalArgs: { track: "gfe75" },
-			endpointName: "questions",
-		} as ReturnType<typeof useQuestionsQuery>);
 	});
 
-	it("renders loading state", () => {
-		mockUseQuestionsQuery.mockReturnValue({
-			data: undefined,
-			error: undefined,
-			isLoading: true,
-			isFetching: true,
-			isSuccess: false,
-			isError: false,
-			refetch: jest.fn(),
-			currentData: undefined,
-			dataUpdatedAt: 0,
-			errorUpdatedAt: 0,
-			failureCount: 0,
-			failureReason: undefined,
-			isUninitialized: false,
-			status: "pending",
-			requestId: "",
-			startedTimeStamp: 0,
-			fulfilledTimeStamp: 0,
-			isLoadingError: false,
-			isRefetchError: false,
-			originalArgs: { track: "gfe75" },
-			endpointName: "questions",
-		} as ReturnType<typeof useQuestionsQuery>);
-
-		render(<TrackQuestionsPage track="gfe75" />);
-		expect(screen.getByText("Loading questions...")).toBeInTheDocument();
-	});
-
-	it("renders error state", () => {
-		mockUseQuestionsQuery.mockReturnValue({
-			data: undefined,
-			error: { message: "Failed to load" },
-			isLoading: false,
-			isFetching: false,
-			isSuccess: false,
-			isError: true,
-			refetch: jest.fn(),
-			currentData: undefined,
-			dataUpdatedAt: 0,
-			errorUpdatedAt: 0,
-			failureCount: 1,
-			failureReason: undefined,
-			isUninitialized: false,
-			status: "rejected",
-			requestId: "",
-			startedTimeStamp: 0,
-			fulfilledTimeStamp: 0,
-			isLoadingError: true,
-			isRefetchError: false,
-			originalArgs: { track: "gfe75" },
-			endpointName: "questions",
-		} as ReturnType<typeof useQuestionsQuery>);
-
-		render(<TrackQuestionsPage track="gfe75" />);
-		expect(screen.getByText("Failed to load")).toBeInTheDocument();
-	});
-
-	it("renders question list when loaded", () => {
-		render(<TrackQuestionsPage track="gfe75" />);
+	it("renders question list", () => {
+		render(<TrackQuestionsPage track="gfe75" questions={mockQuestions} />);
 		expect(screen.getByText(/Debounce/)).toBeInTheDocument();
 		expect(screen.getByText(/Array\.prototype\.reduce/)).toBeInTheDocument();
 	});
 
 	it("renders track title and progress", () => {
-		render(<TrackQuestionsPage track="gfe75" />);
+		render(<TrackQuestionsPage track="gfe75" questions={mockQuestions} />);
 		expect(screen.getByRole("heading", { name: "GFE 75" })).toBeInTheDocument();
 		expect(screen.getByText("1/2 complete")).toBeInTheDocument();
 	});
 
 	it("filters questions by search", async () => {
 		const user = userEvent.setup();
-		render(<TrackQuestionsPage track="gfe75" />);
+		render(<TrackQuestionsPage track="gfe75" questions={mockQuestions} />);
 
 		const searchInput = screen.getByLabelText("Search questions");
 		await user.type(searchInput, "Debounce");
@@ -161,11 +72,11 @@ describe("TrackQuestionsPage", () => {
 	it("hydrates filters from URL params", () => {
 		window.history.replaceState(window.history.state, "", "/gfe75?search=reduce&status=todo&category=JavaScript%20functions");
 
-		render(<TrackQuestionsPage track="gfe75" />);
+		render(<TrackQuestionsPage track="gfe75" questions={mockQuestions} />);
 
 		expect(screen.getByLabelText("Search questions")).toHaveValue("reduce");
-		expect(screen.getByLabelText("Status")).toHaveTextContent("Todo");
-		expect(screen.getByLabelText("Category")).toHaveTextContent("JavaScript functions");
+		expect(within(screen.getByTestId("filter-status")).getByRole("combobox")).toHaveTextContent("Todo");
+		expect(within(screen.getByTestId("filter-category")).getByRole("combobox")).toHaveTextContent("JavaScript functions");
 		expect(screen.queryByText(/Debounce/)).not.toBeInTheDocument();
 		expect(screen.getByText(/Array\.prototype\.reduce/)).toBeInTheDocument();
 		expect(screen.getByTestId("track-progress")).toHaveTextContent("0/1 complete");
@@ -173,7 +84,7 @@ describe("TrackQuestionsPage", () => {
 
 	it("syncs filter changes back to URL params", async () => {
 		const user = userEvent.setup();
-		render(<TrackQuestionsPage track="gfe75" />);
+		render(<TrackQuestionsPage track="gfe75" questions={mockQuestions} />);
 
 		const searchInput = screen.getByLabelText("Search questions");
 		await user.type(searchInput, "Debounce");

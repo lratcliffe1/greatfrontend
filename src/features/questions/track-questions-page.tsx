@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 
 import type { Question, Track } from "@/content/questions";
@@ -23,32 +23,36 @@ function isTrackStatus(value: string | null): value is Question["status"] {
 	return value === "todo" || value === "in_progress" || value === "done";
 }
 
-function readFiltersFromUrl(track: Track): TrackFilterValues {
+function getUrlFilters(track: Track): {
+	hasFilterParams: boolean;
+	filters: TrackFilterValues;
+} {
+	const defaults: TrackFilterValues = {
+		search: "",
+		category: "all",
+		status: "all",
+	};
+
 	if (typeof window === "undefined") {
-		return { search: "", category: "all", status: "all" };
+		return {
+			hasFilterParams: false,
+			filters: defaults,
+		};
 	}
 
 	const params = new URLSearchParams(window.location.search);
 	const statusParam = params.get("status");
+	const hasFilterParams =
+		params.has("search") || params.has("status") || (track !== "blind75" && params.has("category"));
 
 	return {
-		search: params.get("search") ?? "",
-		category: track === "blind75" ? "all" : (params.get("category") ?? "all"),
-		status: isTrackStatus(statusParam) ? statusParam : "all",
+		hasFilterParams,
+		filters: {
+			search: params.get("search") ?? "",
+			category: track === "blind75" ? "all" : (params.get("category") ?? "all"),
+			status: isTrackStatus(statusParam) ? statusParam : "all",
+		},
 	};
-}
-
-function hasFilterParamsInUrl(track: Track) {
-	if (typeof window === "undefined") {
-		return false;
-	}
-
-	const params = new URLSearchParams(window.location.search);
-	if (params.has("search") || params.has("status")) {
-		return true;
-	}
-
-	return track !== "blind75" && params.has("category");
 }
 
 function syncFiltersToUrl(track: Track, filters: TrackFilterValues) {
@@ -88,28 +92,37 @@ function getUniqueCategories(questions: Question[]) {
 export function TrackQuestionsPage({ track, questions }: { track: Track; questions: Question[] }) {
 	const dispatch = useAppDispatch();
 	const skipSyncRef = useRef(true);
+	const [{ hasFilterParams: hasUrlFilters, filters: initialUrlFilters }] = useState(() => getUrlFilters(track));
 	const search = useAppSelector((state) => selectSearch(state, track));
 	const category = useAppSelector((state) => selectCategory(state, track));
 	const status = useAppSelector((state) => selectStatus(state, track));
+	const isStoreHydratedFromUrl =
+		hasUrlFilters &&
+		search === initialUrlFilters.search &&
+		category === initialUrlFilters.category &&
+		status === initialUrlFilters.status;
+	const shouldUseInitialUrlFilters = hasUrlFilters && !isStoreHydratedFromUrl;
+	const effectiveSearch = shouldUseInitialUrlFilters ? initialUrlFilters.search : search;
+	const effectiveCategory = shouldUseInitialUrlFilters ? initialUrlFilters.category : category;
+	const effectiveStatus = shouldUseInitialUrlFilters ? initialUrlFilters.status : status;
 
 	useEffect(() => {
 		skipSyncRef.current = true;
 
-		if (hasFilterParamsInUrl(track)) {
-			const filtersFromUrl = readFiltersFromUrl(track);
+		if (hasUrlFilters && !isStoreHydratedFromUrl) {
 			dispatch(
 				hydrateFiltersFromQuery({
 					track,
-					search: filtersFromUrl.search,
-					category: filtersFromUrl.category,
-					status: filtersFromUrl.status,
+					search: initialUrlFilters.search,
+					category: initialUrlFilters.category,
+					status: initialUrlFilters.status,
 				}),
 			);
 			return;
 		}
 
 		skipSyncRef.current = false;
-	}, [dispatch, track]);
+	}, [dispatch, hasUrlFilters, initialUrlFilters, isStoreHydratedFromUrl, track]);
 
 	useEffect(() => {
 		if (skipSyncRef.current) {
@@ -117,24 +130,25 @@ export function TrackQuestionsPage({ track, questions }: { track: Track; questio
 			return;
 		}
 
-		syncFiltersToUrl(track, { search, category, status });
-	}, [track, search, category, status]);
+		syncFiltersToUrl(track, { search: effectiveSearch, category: effectiveCategory, status: effectiveStatus });
+	}, [effectiveCategory, effectiveSearch, effectiveStatus, track]);
 
 	const categories = useMemo(() => getUniqueCategories(questions), [questions]);
 
 	const filtered = useMemo(() => {
 		return questions.filter((question) => {
 			const matchesSearch =
-				search.length === 0 ||
-				String(question.questionNumber).startsWith(search.trim()) ||
-				question.title.toLowerCase().includes(search.toLowerCase()) ||
-				question.tags.some((tag) => tag.toLowerCase().includes(search.toLowerCase()));
-			const matchesCategory = track === "blind75" || category === "all" || question.category === category;
-			const matchesStatus = status === "all" || question.status === status;
+				effectiveSearch.length === 0 ||
+				String(question.questionNumber).startsWith(effectiveSearch.trim()) ||
+				question.title.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
+				question.tags.some((tag) => tag.toLowerCase().includes(effectiveSearch.toLowerCase()));
+			const matchesCategory =
+				track === "blind75" || effectiveCategory === "all" || question.category === effectiveCategory;
+			const matchesStatus = effectiveStatus === "all" || question.status === effectiveStatus;
 
 			return matchesSearch && matchesCategory && matchesStatus;
 		});
-	}, [questions, search, category, status, track]);
+	}, [effectiveCategory, effectiveSearch, effectiveStatus, questions, track]);
 
 	const completedCount = filtered.filter((question) => question.status === "done").length;
 
@@ -162,7 +176,7 @@ export function TrackQuestionsPage({ track, questions }: { track: Track; questio
 							<Select
 								labelId="category-label"
 								label="Category"
-								value={category}
+								value={effectiveCategory}
 								onChange={(event) => dispatch(setCategory({ track, value: String(event.target.value) }))}
 							>
 								<MenuItem value="all">All</MenuItem>
@@ -184,7 +198,7 @@ export function TrackQuestionsPage({ track, questions }: { track: Track; questio
 						<Select
 							labelId="status-label"
 							label="Status"
-							value={status}
+							value={effectiveStatus}
 							onChange={(event) =>
 								dispatch(
 									setStatus({
@@ -221,7 +235,7 @@ export function TrackQuestionsPage({ track, questions }: { track: Track; questio
 							id="search-questions"
 							type="search"
 							data-testid="filter-search"
-							value={search}
+							value={effectiveSearch}
 							onChange={(event) => dispatch(setSearch({ track, value: event.target.value }))}
 							className="w-full min-w-0 max-w-full rounded border border-card-border bg-background px-3 py-2 text-xs text-foreground focus:border-teal-600 focus:outline-none focus:ring-1 focus:ring-teal-600 dark:focus:border-teal-500 dark:focus:ring-teal-500 sm:text-sm"
 						/>
