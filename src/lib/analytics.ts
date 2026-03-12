@@ -2,12 +2,12 @@ import type { BeforeSend } from "@vercel/analytics/next";
 
 let lastTrackedPathname: string | null = null;
 
-function toPathname(url: string): string {
+function toUrl(url: string): URL | null {
 	try {
-		const parsed = new URL(url, "https://analytics.local");
-		return parsed.pathname || "/";
+		const base = typeof window !== "undefined" ? window.location.origin : "https://analytics.local";
+		return new URL(url, base);
 	} catch {
-		return "/";
+		return null;
 	}
 }
 
@@ -23,7 +23,12 @@ function isInternalPath(pathname: string): boolean {
 }
 
 export const analyticsBeforeSend: BeforeSend = (event) => {
-	const pathname = normalizePathname(toPathname(event.url));
+	const parsedUrl = toUrl(event.url);
+	if (!parsedUrl) {
+		return event;
+	}
+
+	const pathname = normalizePathname(parsedUrl.pathname || "/");
 
 	if (isInternalPath(pathname)) {
 		return null;
@@ -37,5 +42,9 @@ export const analyticsBeforeSend: BeforeSend = (event) => {
 		lastTrackedPathname = pathname;
 	}
 
-	return { ...event, url: pathname };
+	parsedUrl.pathname = pathname;
+	parsedUrl.search = "";
+	parsedUrl.hash = "";
+
+	return { ...event, url: parsedUrl.toString() };
 };
