@@ -59,8 +59,9 @@ const eslintConfig = defineConfig([
 		"coverage/**",
 		"playwright-report/**",
 		"test-results/**",
-		// Avoid eslint-plugin-react bug when linting config (getFilename is not a function)
+		// Avoid eslint-plugin-react bug when linting config files (getFilename is not a function)
 		"eslint.config.mjs",
+		"**/*.config.{js,ts,mjs,cjs}",
 	]),
 ]);
 
