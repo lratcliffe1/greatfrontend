@@ -1,25 +1,100 @@
 "use client";
 
-import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { AppButton, MutedText } from "@/components/ui/tailwind-primitives";
-import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
-import { addTask, clearTasks, removeTask } from "@/lib/store/todoDemoSlice";
+
+type Task = {
+	id: number;
+	label: string;
+};
+
+const TODO_STORAGE_KEY = "todo-demo/tasks/v1";
+
+function readStoredTasks(): Task[] {
+	if (typeof window === "undefined") {
+		return [];
+	}
+
+	try {
+		const storedTasks = window.localStorage.getItem(TODO_STORAGE_KEY);
+		if (!storedTasks) {
+			return [];
+		}
+
+		const parsed = JSON.parse(storedTasks);
+		if (!Array.isArray(parsed)) {
+			return [];
+		}
+
+		return parsed.filter((task): task is Task => {
+			if (typeof task !== "object" || task === null) {
+				return false;
+			}
+			const record = task as Partial<Task>;
+			return typeof record.id === "number" && Number.isFinite(record.id) && typeof record.label === "string";
+		});
+	} catch {
+		return [];
+	}
+}
+
+function getNextTaskId(tasks: Task[]): number {
+	return tasks.reduce((maxId, task) => Math.max(maxId, task.id), 0) + 1;
+}
 
 export function TodoDemo() {
-	const dispatch = useAppDispatch();
-	const tasks = useAppSelector((state) => state.todoDemo.tasks);
+	const [tasks, setTasks] = useState<Task[]>([]);
 	const [input, setInput] = useState("");
+	const nextTaskIdRef = useRef(1);
+	const hasHydratedFromStorageRef = useRef(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const trimmedInput = input.trim();
 	const hasTasks = tasks.length > 0;
 	const taskCountLabel = tasks.length === 1 ? "1 task" : `${tasks.length} tasks`;
+
+	useEffect(() => {
+		if (typeof window === "undefined") {
+			return;
+		}
+
+		const scheduleFrame =
+			typeof window.requestAnimationFrame === "function"
+				? window.requestAnimationFrame.bind(window)
+				: (callback: FrameRequestCallback) => window.setTimeout(() => callback(performance.now()), 0);
+		const cancelFrame =
+			typeof window.cancelAnimationFrame === "function" ? window.cancelAnimationFrame.bind(window) : window.clearTimeout.bind(window);
+
+		const animationFrameId = scheduleFrame(() => {
+			const storedTasks = readStoredTasks();
+			setTasks(storedTasks);
+			nextTaskIdRef.current = getNextTaskId(storedTasks);
+			hasHydratedFromStorageRef.current = true;
+		});
+
+		return () => {
+			cancelFrame(animationFrameId);
+		};
+	}, []);
+
+	useEffect(() => {
+		if (typeof window === "undefined" || !hasHydratedFromStorageRef.current) {
+			return;
+		}
+
+		window.localStorage.setItem(TODO_STORAGE_KEY, JSON.stringify(tasks));
+	}, [tasks]);
 
 	function onSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 		const trimmed = input.trim();
 		if (!trimmed) return;
 
-		dispatch(addTask(trimmed));
+		const nextTask: Task = {
+			id: nextTaskIdRef.current,
+			label: trimmed,
+		};
+		nextTaskIdRef.current += 1;
+		setTasks((currentTasks) => [...currentTasks, nextTask]);
 		setInput("");
 		inputRef.current?.focus();
 	}
@@ -29,11 +104,11 @@ export function TodoDemo() {
 	}
 
 	function deleteTask(taskId: number) {
-		dispatch(removeTask(taskId));
+		setTasks((currentTasks) => currentTasks.filter((task) => task.id !== taskId));
 	}
 
 	function removeAllTasks() {
-		dispatch(clearTasks());
+		setTasks([]);
 		inputRef.current?.focus();
 	}
 
@@ -59,7 +134,7 @@ export function TodoDemo() {
 			<div className="flex items-center justify-between gap-2">
 				<MutedText aria-live="polite">{hasTasks ? `${taskCountLabel} in your list` : "No tasks yet. Add your first task."}</MutedText>
 
-				<AppButton type="button" variant="dangerSubtle" size="sm" className="font-medium" onClick={removeAllTasks} disabled={tasks.length == 0}>
+				<AppButton type="button" variant="dangerSubtle" size="sm" className="font-medium" onClick={removeAllTasks} disabled={tasks.length === 0}>
 					Clear all
 				</AppButton>
 			</div>
