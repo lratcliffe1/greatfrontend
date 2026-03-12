@@ -1,7 +1,10 @@
 /**
  * In-memory demo data for Todo and News Feed.
  * Data flows through GraphQL as if from a real DB; swap resolvers when adding a DB.
+ * Todo tasks are isolated per session (cookie) so each browser has its own list.
  */
+
+import type { GraphQLContext } from "@/lib/graphql/types";
 
 const PAGE_SIZE = 4;
 const VALID_REACTIONS = ["like", "haha", "wow"] as const;
@@ -19,9 +22,17 @@ export type FeedPost = {
 };
 export type FeedPage = { posts: FeedPost[]; nextCursor: string | null };
 
-// In-memory stores (module-level; persists for process lifetime)
-let tasksStore: TodoTask[] = [];
-let nextIdStore = 1;
+type SessionStore = { tasks: TodoTask[]; nextId: number };
+const sessionsStore = new Map<string, SessionStore>();
+
+function getSessionStore(sessionId: string): SessionStore {
+	let store = sessionsStore.get(sessionId);
+	if (!store) {
+		store = { tasks: [], nextId: 1 };
+		sessionsStore.set(sessionId, store);
+	}
+	return store;
+}
 
 function createSeedPost(index: number): FeedPost {
 	return {
@@ -39,42 +50,65 @@ function createSeedPost(index: number): FeedPost {
 	};
 }
 
-const feedPostsStore: FeedPost[] = Array.from({ length: 30 }).map((_, i) => createSeedPost(i));
+const SEED_POSTS: FeedPost[] = Array.from({ length: 30 }).map((_, i) => createSeedPost(i));
+const feedBySession = new Map<string, FeedPost[]>();
+
+function getFeedForSession(sessionId: string): FeedPost[] {
+	let feed = feedBySession.get(sessionId);
+	if (!feed) {
+		feed = [...SEED_POSTS];
+		feedBySession.set(sessionId, feed);
+	}
+	return feed;
+}
 
 export const demoResolvers = {
 	Query: {
-		tasks: (): TodoTask[] => [...tasksStore],
-		feedPage: (_: unknown, { cursor }: { cursor?: string | null }): FeedPage => {
+		tasks: (_: unknown, __: unknown, context: GraphQLContext): TodoTask[] => {
+			const sessionId = context?.sessionId ?? "default";
+			return [...getSessionStore(sessionId).tasks];
+		},
+		feedPage: (_: unknown, { cursor }: { cursor?: string | null }, context: GraphQLContext): FeedPage => {
+			const sessionId = context?.sessionId ?? "default";
+			const feed = getFeedForSession(sessionId);
 			const cursorVal = cursor ?? null;
 			let start = 0;
 			if (cursorVal) {
-				const idx = feedPostsStore.findIndex((p) => p.id === cursorVal);
-				start = idx >= 0 ? idx + 1 : feedPostsStore.length;
+				const idx = feed.findIndex((p) => p.id === cursorVal);
+				start = idx >= 0 ? idx + 1 : feed.length;
 			}
-			const pagePosts = feedPostsStore.slice(start, start + PAGE_SIZE);
+			const pagePosts = feed.slice(start, start + PAGE_SIZE);
 			const last = pagePosts[pagePosts.length - 1] ?? null;
-			const nextCursor = start + pagePosts.length < feedPostsStore.length && last ? last.id : null;
+			const nextCursor = start + pagePosts.length < feed.length && last ? last.id : null;
 			return { posts: pagePosts, nextCursor };
 		},
 	},
 	Mutation: {
-		addTask: (_: unknown, { label }: { label: string }): TodoTask => {
+		addTask: (_: unknown, { label }: { label: string }, context: GraphQLContext): TodoTask => {
+			const sessionId = context?.sessionId ?? "default";
+			const store = getSessionStore(sessionId);
 			const trimmed = label.trim();
 			if (!trimmed) throw new Error("Label cannot be empty");
-			const task: TodoTask = { id: nextIdStore++, label: trimmed };
-			tasksStore = [...tasksStore, task];
+			const task: TodoTask = { id: store.nextId++, label: trimmed };
+			store.tasks = [...store.tasks, task];
 			return task;
 		},
-		removeTask: (_: unknown, { id }: { id: number }): boolean => {
-			tasksStore = tasksStore.filter((t) => t.id !== id);
+		removeTask: (_: unknown, { id }: { id: number }, context: GraphQLContext): boolean => {
+			const sessionId = context?.sessionId ?? "default";
+			const store = getSessionStore(sessionId);
+			store.tasks = store.tasks.filter((t) => t.id !== id);
 			return true;
 		},
-		clearTasks: (): boolean => {
-			tasksStore = [];
-			nextIdStore = 1;
+		clearTasks: (_: unknown, __: unknown, context: GraphQLContext): boolean => {
+			const sessionId = context?.sessionId ?? "default";
+			const store = getSessionStore(sessionId);
+			store.tasks = [];
+			store.nextId = 1;
 			return true;
 		},
-		createPost: (_: unknown, { content, imageUrl }: { content?: string; imageUrl?: string }): FeedPost => {
+		createPost: (_: unknown, { content, imageUrl }: { content?: string; imageUrl?: string }, context: GraphQLContext): FeedPost => {
+			const sessionId = context?.sessionId ?? "default";
+			const feed = getFeedForSession(sessionId);
 			const newPost: FeedPost = {
 				id: `post-${Date.now()}`,
 				author: "Liam",
@@ -84,17 +118,19 @@ export const demoResolvers = {
 				reactions: { like: 0, haha: 0, wow: 0 },
 				reactionByMe: null,
 			};
-			feedPostsStore.unshift(newPost);
+			feed.unshift(newPost);
 			return newPost;
 		},
-		reactToPost: (_: unknown, { postId, reaction }: { postId: string; reaction?: string | null }): FeedPost => {
+		reactToPost: (_: unknown, { postId, reaction }: { postId: string; reaction?: string | null }, context: GraphQLContext): FeedPost => {
+			const sessionId = context?.sessionId ?? "default";
+			const feed = getFeedForSession(sessionId);
 			const reactionVal = reaction ?? null;
 			const nextReaction =
 				reactionVal && VALID_REACTIONS.includes(reactionVal as (typeof VALID_REACTIONS)[number])
 					? (reactionVal as (typeof VALID_REACTIONS)[number])
 					: null;
 
-			const post = feedPostsStore.find((p) => p.id === postId);
+			const post = feed.find((p) => p.id === postId);
 			if (!post) throw new Error("Post not found");
 
 			const prev = post.reactionByMe;
@@ -107,8 +143,8 @@ export const demoResolvers = {
 				reactions: nextReactions,
 				reactionByMe: nextReaction,
 			};
-			const idx = feedPostsStore.findIndex((p) => p.id === postId);
-			if (idx >= 0) feedPostsStore[idx] = updated;
+			const idx = feed.findIndex((p) => p.id === postId);
+			if (idx >= 0) feed[idx] = updated;
 			return updated;
 		},
 	},

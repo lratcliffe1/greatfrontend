@@ -79,9 +79,11 @@ describe("GraphQL API route", () => {
 
 		expect(response.status).toBe(200);
 		expect(data.data).toEqual({ questions: [{ id: "gfe-debounce", title: "Debounce" }] });
-		expect(mockExecuteGraphQLQuery).toHaveBeenCalledWith("query GetQuestions($track: Track!) { questions(track: $track) { id title } }", {
-			track: "gfe75",
-		});
+		expect(mockExecuteGraphQLQuery).toHaveBeenCalledWith(
+			"query GetQuestions($track: Track!) { questions(track: $track) { id title } }",
+			{ track: "gfe75" },
+			expect.objectContaining({ sessionId: expect.any(String) }),
+		);
 	});
 
 	it("returns errors in response when schema returns errors", async () => {

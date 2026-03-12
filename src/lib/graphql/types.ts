@@ -14,6 +14,8 @@ export type QuestionResponse = {
 	question: GraphQLQuestion | null;
 };
 
+export type GraphQLContext = { sessionId?: string };
+
 export type GraphQLError = {
 	message: string;
 };

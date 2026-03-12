@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
+
 import { executeGraphQLQuery } from "@/lib/graphql/schema";
 import type { GraphQLError } from "@/lib/graphql/types";
+
+const SESSION_COOKIE = "todo-session";
+
+function getSessionFromCookie(cookieHeader: string | null): string | null {
+	if (!cookieHeader) return null;
+	const match = cookieHeader.match(new RegExp(`${SESSION_COOKIE}=([^;]+)`));
+	return match?.[1]?.trim() ?? null;
+}
 
 export async function POST(request: Request) {
 	let body: unknown;
@@ -19,10 +29,18 @@ export async function POST(request: Request) {
 		return NextResponse.json({ error: "GraphQL query is required." }, { status: 400 });
 	}
 
-	const result = await executeGraphQLQuery(query, variables as Record<string, unknown> | undefined);
+	const cookieHeader = request.headers.get("Cookie");
+	let sessionId = getSessionFromCookie(cookieHeader);
+	const isNewSession = !sessionId;
+	if (!sessionId) {
+		sessionId = randomUUID();
+	}
+
+	const result = await executeGraphQLQuery(query, variables as Record<string, unknown> | undefined, {
+		sessionId,
+	});
 
 	if (result.errors && result.errors.length > 0) {
-		// Return 200 with errors for GraphQL spec compliance; client can still parse
 		return NextResponse.json(
 			{
 				data: result.data ?? null,
@@ -32,5 +50,9 @@ export async function POST(request: Request) {
 		);
 	}
 
-	return NextResponse.json({ data: result.data });
+	const response = NextResponse.json({ data: result.data });
+	if (isNewSession) {
+		response.headers.append("Set-Cookie", `${SESSION_COOKIE}=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 365}`);
+	}
+	return response;
 }

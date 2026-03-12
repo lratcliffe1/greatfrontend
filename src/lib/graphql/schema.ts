@@ -2,6 +2,7 @@ import { buildSchema, defaultFieldResolver, graphql, type GraphQLResolveInfo } f
 
 import { getQuestionByPath, getQuestionsByTrack, type Question, type Track } from "@/content/questions";
 import { demoResolvers } from "@/lib/graphql/demo-resolvers";
+import type { GraphQLContext } from "@/lib/graphql/types";
 
 const schema = buildSchema(`
 	enum Track {
@@ -105,12 +106,15 @@ const root = {
 	...demoResolvers.Mutation,
 };
 
-export async function executeGraphQLQuery(query: string, variables?: Record<string, unknown>) {
+export type { GraphQLContext } from "@/lib/graphql/types";
+
+export async function executeGraphQLQuery(query: string, variables?: Record<string, unknown>, context?: GraphQLContext) {
 	return graphql({
 		schema,
 		source: query,
 		rootValue: root,
 		variableValues: variables,
+		contextValue: context ?? {},
 		fieldResolver: rootFieldResolver,
 	});
 }

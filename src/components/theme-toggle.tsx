@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useTheme } from "@/lib/theme-context";
 
 function SunIcon({ className }: { className?: string }) {
@@ -20,8 +21,21 @@ function MoonIcon({ className }: { className?: string }) {
 }
 
 export function ThemeToggle() {
+	const [mounted, setMounted] = useState(false);
 	const { resolvedMode, setPreference } = useTheme();
 	const isDark = resolvedMode === "dark";
+
+	useEffect(() => {
+		queueMicrotask(() => setMounted(true));
+	}, []);
+
+	if (!mounted) {
+		return (
+			<div className="size-9 rounded-md p-2" aria-hidden>
+				<MoonIcon className="size-5 text-muted" />
+			</div>
+		);
+	}
 
 	return (
 		<button
