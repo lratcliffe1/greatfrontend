@@ -1,9 +1,18 @@
 "use client";
 
-import { startTransition, useEffect, useRef, useState } from "react";
+import { startTransition, useState } from "react";
 
-import { AppButton, EditableFieldPrompt } from "@/components/ui/tailwind-primitives";
-import { StepVisualizerLayout, type CodeLine } from "@/components/visualizer/step-visualizer-layout";
+import { StepVisualizerInput } from "@/components/visualizer/step-visualizer-input";
+import {
+	StepVisualizerLayout,
+	TraceEmptyState,
+	TracePanelContent,
+	TraceLine,
+	StepVisualizerPage,
+	type CodeLine,
+} from "@/components/visualizer/step-visualizer-layout";
+import { useTraceFlash } from "@/components/visualizer/use-trace-flash";
+import { useStepNavigation } from "@/components/visualizer/use-step-navigation";
 import { getBalancedBracketInputError, getBalancedBracketSteps } from "@/solutions/blind75/balanced-brackets/solution";
 
 const CODE_LINES: CodeLine[] = [
@@ -11,10 +20,7 @@ const CODE_LINES: CodeLine[] = [
 	{ line: 2, code: "const CLOSE_TO_OPEN = { ')': '(', '}': '{', ']': '[' };" },
 	{ line: 3, code: "const OPEN_TO_CLOSE = { '(': ')', '{': '}', '[': ']' };" },
 	{ line: 4, code: "" },
-	{
-		line: 5,
-		code: "export function getBalancedBracketSteps(input: string) {",
-	},
+	{ line: 5, code: "export function getBalancedBracketSteps(input: string) {" },
 	{ line: 6, code: "  const steps: BracketStep[] = [];" },
 	{ line: 7, code: "  const stack: string[] = [];" },
 	{ line: 8, code: "" },
@@ -26,10 +32,7 @@ const CODE_LINES: CodeLine[] = [
 	{ line: 14, code: "    const top = stack[stack.length - 1];" },
 	{ line: 15, code: "    const valid = top === expected;" },
 	{ line: 16, code: "    if (!valid) {" },
-	{
-		line: 17,
-		code: '      const expectedClose = top ? OPEN_TO_CLOSE[top] : "opening bracket"; return false;',
-	},
+	{ line: 17, code: '      const expectedClose = top ? OPEN_TO_CLOSE[top] : "opening bracket"; return false;' },
 	{ line: 18, code: "    }" },
 	{ line: 19, code: "    stack.pop();" },
 	{ line: 20, code: "  }" },
@@ -44,115 +47,57 @@ export function BalancedBracketsVisualizer() {
 	const [input, setInput] = useState(INITIAL_INPUT);
 	const [steps, setSteps] = useState(() => getBalancedBracketSteps(INITIAL_INPUT));
 	const [stepIndex, setStepIndex] = useState(0);
-	const [isTraceFlashing, setIsTraceFlashing] = useState(false);
-	const traceFlashRafRef = useRef<number | null>(null);
-	const traceFlashEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const { flash, tracePanelClassName } = useTraceFlash();
+
 	const inputError = getBalancedBracketInputError(input);
-	const step = steps[Math.min(stepIndex, Math.max(steps.length - 1, 0))] ?? null;
+	const { step, onPrev, onNext, canPrev, canNext } = useStepNavigation(steps, stepIndex, setStepIndex);
 	const activeLine = step?.line ?? null;
 
-	function flashExecutionTrace() {
-		if (traceFlashRafRef.current !== null) {
-			cancelAnimationFrame(traceFlashRafRef.current);
-			traceFlashRafRef.current = null;
-		}
-		if (traceFlashEndTimeoutRef.current !== null) {
-			clearTimeout(traceFlashEndTimeoutRef.current);
-			traceFlashEndTimeoutRef.current = null;
-		}
-
-		setIsTraceFlashing(false);
-		traceFlashRafRef.current = requestAnimationFrame(() => {
-			setIsTraceFlashing(true);
-			traceFlashEndTimeoutRef.current = setTimeout(() => {
-				setIsTraceFlashing(false);
-				traceFlashEndTimeoutRef.current = null;
-			}, 720);
-			traceFlashRafRef.current = null;
-		});
-	}
-
-	useEffect(() => {
-		return () => {
-			if (traceFlashRafRef.current !== null) {
-				cancelAnimationFrame(traceFlashRafRef.current);
-			}
-			if (traceFlashEndTimeoutRef.current !== null) {
-				clearTimeout(traceFlashEndTimeoutRef.current);
-			}
-		};
-	}, []);
-
 	return (
-		<div className="space-y-4">
-			<div className="space-y-2">
-				<EditableFieldPrompt
-					htmlFor="bracket-input"
-					label="Bracket input"
-					hint="Use bracket characters. Only valid inputs within the problem constraints can be applied."
-				/>
-				<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-					<input
-						id="bracket-input"
-						className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground sm:flex-1"
-						aria-invalid={Boolean(inputError)}
-						value={input}
-						placeholder="Try: ([]){}, ([)], or ((("
-						onChange={(event) => {
-							setInput(event.target.value);
-						}}
-					/>
-					<AppButton
-						type="button"
-						onClick={() => {
-							if (inputError) return;
-							// Defer heavy step computation so the click can paint first (better INP).
-							startTransition(() => {
-								setSteps(getBalancedBracketSteps(input));
-								setStepIndex(0);
-								flashExecutionTrace();
-							});
-						}}
-						disabled={Boolean(inputError)}
-					>
-						Apply input
-					</AppButton>
-				</div>
-				<div className="min-h-10">
-					{inputError && (
-						<p className="text-sm text-amber-600 dark:text-amber-400" role="alert">
-							{inputError}
-						</p>
-					)}
-				</div>
-			</div>
+		<StepVisualizerPage>
+			<StepVisualizerInput
+				label="Bracket input"
+				hint="Use bracket characters. Only valid inputs within the problem constraints can be applied."
+				inputId="bracket-input"
+				placeholder="Try: ([]){}, ([)], or ((("
+				value={input}
+				onChange={setInput}
+				error={inputError}
+				onApply={() => {
+					if (inputError) return;
+					startTransition(() => {
+						setSteps(getBalancedBracketSteps(input));
+						setStepIndex(0);
+						flash();
+					});
+				}}
+				applyDisabled={Boolean(inputError)}
+			/>
 
 			<StepVisualizerLayout
 				codeTitle="Balanced Brackets implementation"
 				codeLines={CODE_LINES}
 				activeLine={activeLine}
 				traceTitle="Execution trace (step-by-step)"
-				tracePanelClassName={isTraceFlashing ? "ring-2 ring-teal-500/70 ring-offset-2 ring-offset-background" : undefined}
+				tracePanelClassName={tracePanelClassName}
 				stepIndex={stepIndex}
 				totalSteps={steps.length}
-				onPrev={() => setStepIndex((current) => Math.max(current - 1, 0))}
-				onNext={() => setStepIndex((current) => Math.min(current + 1, steps.length - 1))}
-				canPrev={steps.length > 0 && stepIndex > 0}
-				canNext={steps.length > 0 && stepIndex < steps.length - 1}
+				onPrev={onPrev}
+				onNext={onNext}
+				canPrev={canPrev}
+				canNext={canNext}
 			>
 				{step ? (
-					<div className="rounded border border-card-border bg-card-bg p-3">
-						<p className="text-sm text-foreground">Current token: {step.token}</p>
-						<p className="text-sm text-foreground">Action: {step.action}</p>
-						<p className="text-sm text-foreground">Stack: {step.stack.length ? step.stack.join(" ") : "(empty)"}</p>
-						<p className={`text-sm font-semibold ${step.validSoFar ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>
-							{step.validSoFar ? "Valid so far" : "Invalid"}
-						</p>
-					</div>
+					<TracePanelContent>
+						<TraceLine>Current token: {step.token}</TraceLine>
+						<TraceLine>Action: {step.action}</TraceLine>
+						<TraceLine>Stack: {step.stack.length ? step.stack.join(" ") : "(empty)"}</TraceLine>
+						<TraceLine variant={step.validSoFar ? "success" : "error"}>{step.validSoFar ? "Valid so far" : "Invalid"}</TraceLine>
+					</TracePanelContent>
 				) : (
-					<p className="text-muted">No steps yet for this input.</p>
+					<TraceEmptyState />
 				)}
 			</StepVisualizerLayout>
-		</div>
+		</StepVisualizerPage>
 	);
 }

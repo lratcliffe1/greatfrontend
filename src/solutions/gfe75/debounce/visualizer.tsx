@@ -3,7 +3,16 @@
 import { useMemo, useRef, useState } from "react";
 
 import { AppButton, EditableFieldPrompt } from "@/components/ui/tailwind-primitives";
-import { StepVisualizerLayout, type CodeLine } from "@/components/visualizer/step-visualizer-layout";
+import {
+	StepVisualizerLayout,
+	TraceEmptyState,
+	TracePanelContent,
+	TraceLine,
+	StepVisualizerPage,
+	type CodeLine,
+} from "@/components/visualizer/step-visualizer-layout";
+import { useTraceFlash } from "@/components/visualizer/use-trace-flash";
+import { useStepNavigation } from "@/components/visualizer/use-step-navigation";
 import { debounce, type DebounceTraceEvent } from "@/solutions/gfe75/debounce/solution";
 
 const CODE_LINES: CodeLine[] = [
@@ -28,7 +37,12 @@ type TraceLog = {
 };
 
 function toClockTime(timestamp: number) {
-	return new Date(timestamp).toLocaleTimeString();
+	const d = new Date(timestamp);
+	const hours = String(d.getHours()).padStart(2, "0");
+	const mins = String(d.getMinutes()).padStart(2, "0");
+	const secs = String(d.getSeconds()).padStart(2, "0");
+	const ms = String(d.getMilliseconds()).padStart(3, "0");
+	return `${hours}:${mins}:${secs}.${ms}`;
 }
 
 export function DebounceVisualizer() {
@@ -37,8 +51,9 @@ export function DebounceVisualizer() {
 	const [stepIndex, setStepIndex] = useState(0);
 	const [executedPayloads, setExecutedPayloads] = useState<string[]>([]);
 	const clickCounterRef = useRef(0);
+	const { flash, tracePanelClassName } = useTraceFlash();
 
-	const currentStep = traceLogs[stepIndex] ?? null;
+	const { step: currentStep, onPrev, onNext, canPrev, canNext } = useStepNavigation(traceLogs, stepIndex, setStepIndex);
 	const activeLine = currentStep?.line ?? null;
 
 	const debounced = useMemo(() => {
@@ -65,11 +80,13 @@ export function DebounceVisualizer() {
 	}, [delayMs]);
 
 	function triggerDebouncedCall() {
+		flash();
 		clickCounterRef.current += 1;
 		debounced(`click-${clickCounterRef.current}`);
 	}
 
 	function runRapidScenario() {
+		flash();
 		setTraceLogs([]);
 		setStepIndex(0);
 		setExecutedPayloads([]);
@@ -86,7 +103,7 @@ export function DebounceVisualizer() {
 	}
 
 	return (
-		<div className="space-y-5">
+		<StepVisualizerPage>
 			<div className="space-y-2">
 				<EditableFieldPrompt htmlFor="delay-ms" label="Delay (ms)" hint="Change the delay to see how debounce timing affects execution." />
 				<div className="flex flex-wrap items-center gap-3">
@@ -113,21 +130,23 @@ export function DebounceVisualizer() {
 				codeLines={CODE_LINES}
 				activeLine={activeLine}
 				traceTitle="Trace events (step-by-step)"
+				tracePanelClassName={tracePanelClassName}
 				stepIndex={stepIndex}
 				totalSteps={traceLogs.length}
-				onPrev={() => setStepIndex((current) => Math.max(0, current - 1))}
-				onNext={() => setStepIndex((current) => Math.min(traceLogs.length - 1, current + 1))}
-				canPrev={traceLogs.length > 0 && stepIndex > 0}
-				canNext={traceLogs.length > 0 && stepIndex < traceLogs.length - 1}
+				onPrev={onPrev}
+				onNext={onNext}
+				canPrev={canPrev}
+				canNext={canNext}
 			>
 				{currentStep ? (
-					<div className="rounded border border-card-border bg-card-bg p-2 text-sm text-foreground">
-						<span className="mr-2 font-medium text-muted">{currentStep.at}</span>
-						<span className="mr-2 rounded [background:var(--surface)] px-1.5 py-0.5 text-xs text-foreground">line {currentStep.line}</span>
-						{currentStep.message}
-					</div>
+					<TracePanelContent>
+						<TraceLine>
+							<span className="mr-2 font-medium text-muted">{currentStep.at}</span>
+							{currentStep.message}
+						</TraceLine>
+					</TracePanelContent>
 				) : (
-					<p className="text-sm text-muted">No events yet. Trigger the handler or run the rapid scenario.</p>
+					<TraceEmptyState message="No events yet. Trigger the handler or run the rapid scenario." />
 				)}
 
 				<div>
@@ -137,6 +156,6 @@ export function DebounceVisualizer() {
 					</p>
 				</div>
 			</StepVisualizerLayout>
-		</div>
+		</StepVisualizerPage>
 	);
 }

@@ -2,8 +2,18 @@
 
 import { startTransition, useMemo, useState } from "react";
 
-import { AppButton, EditableFieldPrompt } from "@/components/ui/tailwind-primitives";
-import { StepVisualizerLayout, type CodeLine } from "@/components/visualizer/step-visualizer-layout";
+import { StepVisualizerInput } from "@/components/visualizer/step-visualizer-input";
+import {
+	StepVisualizerLayout,
+	TraceEmptyState,
+	TracePanelContent,
+	TraceLine,
+	StepVisualizerPage,
+	type CodeLine,
+} from "@/components/visualizer/step-visualizer-layout";
+import { useTraceFlash } from "@/components/visualizer/use-trace-flash";
+import { useStepNavigation } from "@/components/visualizer/use-step-navigation";
+import { parseCommaSeparatedIntegers } from "@/lib/parse-comma-separated-integers";
 import {
 	MISSING_NUMBER_CONSTRAINTS,
 	getMissingNumberInputError,
@@ -23,126 +33,64 @@ const CODE_LINES: CodeLine[] = [
 
 const INITIAL_INPUT = "1, 3, 0";
 
-function parseNumbersInput(rawInput: string): {
-	numbers: number[];
-	error: string | null;
-} {
-	const trimmed = rawInput.trim();
-	if (!trimmed) {
-		return {
-			numbers: [],
-			error: `Enter between ${MISSING_NUMBER_CONSTRAINTS.minLength} and ${MISSING_NUMBER_CONSTRAINTS.maxLength} comma-separated integers.`,
-		};
-	}
-
-	const parts = trimmed.split(",").map((part) => part.trim());
-	if (parts.some((part) => part.length === 0)) {
-		return {
-			numbers: [],
-			error: "Use comma-separated integers without empty entries.",
-		};
-	}
-
-	const numbers = parts.map((part) => Number(part));
-	if (numbers.some((value) => !Number.isInteger(value))) {
-		return {
-			numbers: [],
-			error: "Use whole numbers only, for example: 1, 3, 0",
-		};
-	}
-
-	if (parts.length < MISSING_NUMBER_CONSTRAINTS.minLength || parts.length > MISSING_NUMBER_CONSTRAINTS.maxLength) {
-		return {
-			numbers: [],
-			error: `Use between ${MISSING_NUMBER_CONSTRAINTS.minLength} and ${MISSING_NUMBER_CONSTRAINTS.maxLength} integers.`,
-		};
-	}
-
-	const inputError = getMissingNumberInputError(numbers);
-	if (inputError) {
-		return { numbers: [], error: inputError };
-	}
-
-	return { numbers, error: null };
-}
-
 export function FindMissingNumberVisualizer() {
 	const [input, setInput] = useState(INITIAL_INPUT);
-	const [appliedNumbers, setAppliedNumbers] = useState(() => parseNumbersInput(INITIAL_INPUT).numbers);
 	const [stepIndex, setStepIndex] = useState(0);
-
-	const parsedInput = useMemo(() => parseNumbersInput(input), [input]);
+	const { flash, tracePanelClassName } = useTraceFlash();
+	const [appliedNumbers, setAppliedNumbers] = useState(() => {
+		const result = parseCommaSeparatedIntegers(INITIAL_INPUT, MISSING_NUMBER_CONSTRAINTS, getMissingNumberInputError);
+		return result.data ?? [];
+	});
+	const parsedInput = useMemo(() => parseCommaSeparatedIntegers(input, MISSING_NUMBER_CONSTRAINTS, getMissingNumberInputError), [input]);
 	const steps = useMemo(() => getMissingNumberSteps(appliedNumbers), [appliedNumbers]);
-	const clampedIndex = steps.length > 0 ? Math.min(stepIndex, steps.length - 1) : 0;
-	const step = steps[clampedIndex] ?? null;
+	const { step, onPrev, onNext, canPrev, canNext } = useStepNavigation(steps, stepIndex, setStepIndex);
 	const activeLine = step?.line ?? null;
 
 	return (
-		<div className="space-y-4">
-			<div className="space-y-2">
-				<EditableFieldPrompt
-					htmlFor="missing-number-array-input"
-					label="Numbers input"
-					hint="Comma-separated integers in [0, n]. Must have n distinct values with exactly one missing from [0..n]."
-				/>
-				<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-					<input
-						id="missing-number-array-input"
-						className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground sm:flex-1"
-						aria-invalid={Boolean(parsedInput.error)}
-						value={input}
-						placeholder="Try: 1, 3, 0 or 3, 0, 4, 2, 1"
-						onChange={(event) => {
-							setInput(event.target.value);
-						}}
-					/>
-					<AppButton
-						type="button"
-						onClick={() => {
-							if (parsedInput.error) return;
-							startTransition(() => {
-								setAppliedNumbers(parsedInput.numbers);
-								setStepIndex(0);
-							});
-						}}
-						disabled={Boolean(parsedInput.error)}
-					>
-						Apply input
-					</AppButton>
-				</div>
-				<div className="min-h-10">
-					{parsedInput.error && (
-						<p className="text-sm text-amber-600 dark:text-amber-400" role="alert">
-							{parsedInput.error}
-						</p>
-					)}
-				</div>
-			</div>
+		<StepVisualizerPage>
+			<StepVisualizerInput
+				label="Numbers input"
+				hint="Comma-separated integers in [0, n]. Must have n distinct values with exactly one missing from [0..n]."
+				inputId="missing-number-array-input"
+				placeholder="Try: 1, 3, 0 or 3, 0, 4, 2, 1"
+				value={input}
+				onChange={setInput}
+				error={parsedInput.error}
+				onApply={() => {
+					if (parsedInput.error || parsedInput.data === null) return;
+					startTransition(() => {
+						setAppliedNumbers(parsedInput.data);
+						setStepIndex(0);
+						flash();
+					});
+				}}
+				applyDisabled={Boolean(parsedInput.error)}
+			/>
 
 			<StepVisualizerLayout
 				codeTitle="Find Missing Number implementation"
 				codeLines={CODE_LINES}
 				activeLine={activeLine}
-				traceTitle="Execution trace (step-by-step)"
+				tracePanelClassName={tracePanelClassName}
 				stepIndex={stepIndex}
 				totalSteps={steps.length}
-				onPrev={() => setStepIndex((current) => Math.max(current - 1, 0))}
-				onNext={() => setStepIndex((current) => Math.min(current + 1, steps.length - 1))}
-				canPrev={steps.length > 0 && stepIndex > 0}
-				canNext={steps.length > 0 && stepIndex < steps.length - 1}
+				onPrev={onPrev}
+				onNext={onNext}
+				canPrev={canPrev}
+				canNext={canNext}
 			>
 				{step ? (
-					<div className="rounded border border-card-border bg-card-bg p-3 space-y-1">
-						<p className="text-sm text-foreground">{step.action}</p>
-						<p className="text-sm text-foreground">expectedSum = {step.expectedSum ?? "null"}</p>
-						<p className="text-sm text-foreground">actualSum = {step.actualSum ?? "null"}</p>
-						<p className="text-sm text-foreground">missing = {step.missing ?? "null"}</p>
-						{step.missing !== null && <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">Missing number: {step.missing}</p>}
-					</div>
+					<TracePanelContent>
+						<TraceLine>{step.action}</TraceLine>
+						<TraceLine>expectedSum = {step.expectedSum ?? "null"}</TraceLine>
+						<TraceLine>actualSum = {step.actualSum ?? "null"}</TraceLine>
+						<TraceLine>missing = {step.missing ?? "null"}</TraceLine>
+						{step.missing !== null && <TraceLine variant="emphasized">Missing number: {step.missing}</TraceLine>}
+					</TracePanelContent>
 				) : (
-					<p className="text-muted">No steps yet for this input.</p>
+					<TraceEmptyState />
 				)}
 			</StepVisualizerLayout>
-		</div>
+		</StepVisualizerPage>
 	);
 }

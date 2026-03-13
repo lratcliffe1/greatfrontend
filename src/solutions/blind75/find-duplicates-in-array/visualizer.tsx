@@ -2,18 +2,25 @@
 
 import { startTransition, useMemo, useState } from "react";
 
-import { AppButton, EditableFieldPrompt } from "@/components/ui/tailwind-primitives";
-import { StepVisualizerLayout, type CodeLine } from "@/components/visualizer/step-visualizer-layout";
+import { StepVisualizerInput } from "@/components/visualizer/step-visualizer-input";
+import {
+	StepVisualizerLayout,
+	TraceEmptyState,
+	TracePanelContent,
+	TraceLine,
+	StepVisualizerPage,
+	type CodeLine,
+} from "@/components/visualizer/step-visualizer-layout";
+import { useTraceFlash } from "@/components/visualizer/use-trace-flash";
+import { useStepNavigation } from "@/components/visualizer/use-step-navigation";
+import { parseCommaSeparatedIntegers } from "@/lib/parse-comma-separated-integers";
 import { DUPLICATE_ARRAY_CONSTRAINTS, getDuplicateScanSteps, type DuplicateScanOutcome } from "@/solutions/blind75/find-duplicates-in-array/solution";
 
 const CODE_LINES: CodeLine[] = [
 	{ line: 1, code: "export function hasDuplicate(numbers: number[]) {" },
 	{ line: 2, code: "  const seen = new Set<number>();" },
 	{ line: 3, code: "  for (const [index, value] of numbers.entries()) {" },
-	{
-		line: 4,
-		code: "    if (seen.has(value)) {",
-	},
+	{ line: 4, code: "    if (seen.has(value)) {" },
 	{ line: 5, code: "      return true;" },
 	{ line: 6, code: "    }" },
 	{ line: 7, code: "    seen.add(value);" },
@@ -23,52 +30,6 @@ const CODE_LINES: CodeLine[] = [
 ];
 
 const INITIAL_INPUT = "10, 7, 0, 0, 9";
-
-function parseNumbersInput(rawInput: string) {
-	const trimmed = rawInput.trim();
-	if (!trimmed) {
-		return {
-			numbers: [],
-			error: `Enter between ${DUPLICATE_ARRAY_CONSTRAINTS.minLength} and ${DUPLICATE_ARRAY_CONSTRAINTS.maxLength} integers.`,
-		};
-	}
-
-	const parts = trimmed.split(",").map((part) => part.trim());
-	if (parts.some((part) => part.length === 0)) {
-		return {
-			numbers: [],
-			error: "Use comma-separated integers without empty entries.",
-		};
-	}
-
-	const numbers = parts.map((part) => Number(part));
-	if (numbers.some((value) => !Number.isInteger(value))) {
-		return {
-			numbers: [],
-			error: "Use whole numbers only, for example: 5, 7, 1, 3",
-		};
-	}
-
-	if (parts.length < DUPLICATE_ARRAY_CONSTRAINTS.minLength || parts.length > DUPLICATE_ARRAY_CONSTRAINTS.maxLength) {
-		return {
-			numbers: [],
-			error: `Use between ${DUPLICATE_ARRAY_CONSTRAINTS.minLength} and ${DUPLICATE_ARRAY_CONSTRAINTS.maxLength} integers.`,
-		};
-	}
-
-	const outOfRangeValue = numbers.find((value) => value < DUPLICATE_ARRAY_CONSTRAINTS.minValue || value > DUPLICATE_ARRAY_CONSTRAINTS.maxValue);
-	if (outOfRangeValue !== undefined) {
-		return {
-			numbers: [],
-			error: `Each integer must stay within ${DUPLICATE_ARRAY_CONSTRAINTS.minValue} and ${DUPLICATE_ARRAY_CONSTRAINTS.maxValue}.`,
-		};
-	}
-
-	return {
-		numbers,
-		error: null,
-	};
-}
 
 function getOutcomeLabel(outcome: DuplicateScanOutcome) {
 	switch (outcome) {
@@ -81,94 +42,76 @@ function getOutcomeLabel(outcome: DuplicateScanOutcome) {
 	}
 }
 
-function getOutcomeClasses(outcome: DuplicateScanOutcome) {
+function getOutcomeVariant(outcome: DuplicateScanOutcome): "default" | "warning" | "emphasized" {
 	switch (outcome) {
 		case "duplicate":
-			return "text-amber-700 dark:text-amber-400";
+			return "warning";
 		case "complete":
-			return "text-emerald-700 dark:text-emerald-400";
+			return "emphasized";
 		default:
-			return "text-foreground";
+			return "default";
 	}
 }
 
 export function FindDuplicatesInArrayVisualizer() {
 	const [input, setInput] = useState(INITIAL_INPUT);
-	const [appliedNumbers, setAppliedNumbers] = useState(parseNumbersInput(INITIAL_INPUT).numbers);
 	const [stepIndex, setStepIndex] = useState(0);
+	const { flash, tracePanelClassName } = useTraceFlash();
+	const [appliedNumbers, setAppliedNumbers] = useState(() => {
+		const result = parseCommaSeparatedIntegers(INITIAL_INPUT, DUPLICATE_ARRAY_CONSTRAINTS);
+		return result.data ?? [];
+	});
 
-	const parsedInput = useMemo(() => parseNumbersInput(input), [input]);
+	const parsedInput = useMemo(() => parseCommaSeparatedIntegers(input, DUPLICATE_ARRAY_CONSTRAINTS), [input]);
 	const steps = useMemo(() => getDuplicateScanSteps(appliedNumbers), [appliedNumbers]);
-	const step = steps[Math.min(stepIndex, Math.max(steps.length - 1, 0))] ?? null;
+	const { step, onPrev, onNext, canPrev, canNext } = useStepNavigation(steps, stepIndex, setStepIndex);
 	const activeLine = step?.line ?? null;
 
 	return (
-		<div className="space-y-4">
-			<div className="space-y-2">
-				<EditableFieldPrompt
-					htmlFor="duplicate-array-input"
-					label="Numbers input"
-					hint="Use comma-separated integers. Only valid inputs within the problem constraints can be applied."
-				/>
-				<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-					<input
-						id="duplicate-array-input"
-						className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground sm:flex-1"
-						aria-invalid={Boolean(parsedInput.error)}
-						value={input}
-						placeholder="Try: 5, 7, 1, 3 or 10, 7, 0, 0, 9"
-						onChange={(event) => {
-							setInput(event.target.value);
-						}}
-					/>
-					<AppButton
-						type="button"
-						onClick={() => {
-							if (parsedInput.error) return;
-							// Defer so the click can paint first; step computation runs in transition (better INP).
-							startTransition(() => {
-								setAppliedNumbers(parsedInput.numbers);
-								setStepIndex(0);
-							});
-						}}
-						disabled={Boolean(parsedInput.error)}
-					>
-						Apply input
-					</AppButton>
-				</div>
-				<div className="min-h-10">
-					{parsedInput.error && (
-						<p className="text-sm text-amber-600 dark:text-amber-400" role="alert">
-							{parsedInput.error}
-						</p>
-					)}
-				</div>
-			</div>
+		<StepVisualizerPage>
+			<StepVisualizerInput
+				label="Numbers input"
+				hint="Use comma-separated integers. Only valid inputs within the problem constraints can be applied."
+				inputId="duplicate-array-input"
+				placeholder="Try: 5, 7, 1, 3 or 10, 7, 0, 0, 9"
+				value={input}
+				onChange={setInput}
+				error={parsedInput.error}
+				onApply={() => {
+					if (parsedInput.error || parsedInput.data === null) return;
+					startTransition(() => {
+						setAppliedNumbers(parsedInput.data);
+						setStepIndex(0);
+						flash();
+					});
+				}}
+				applyDisabled={Boolean(parsedInput.error)}
+			/>
 
 			<StepVisualizerLayout
 				codeTitle="Find Duplicates in Array implementation"
 				codeLines={CODE_LINES}
 				activeLine={activeLine}
-				traceTitle="Execution trace (step-by-step)"
+				tracePanelClassName={tracePanelClassName}
 				stepIndex={stepIndex}
 				totalSteps={steps.length}
-				onPrev={() => setStepIndex((current) => Math.max(current - 1, 0))}
-				onNext={() => setStepIndex((current) => Math.min(current + 1, steps.length - 1))}
-				canPrev={steps.length > 0 && stepIndex > 0}
-				canNext={steps.length > 0 && stepIndex < steps.length - 1}
+				onPrev={onPrev}
+				onNext={onNext}
+				canPrev={canPrev}
+				canNext={canNext}
 			>
 				{step ? (
-					<div className="rounded border border-card-border bg-card-bg p-3">
-						<p className="text-sm text-foreground">Current index: {step.index ?? "(done)"}</p>
-						<p className="text-sm text-foreground">Current value: {step.value ?? "(none)"}</p>
-						<p className="text-sm text-foreground">Action: {step.action}</p>
-						<p className="text-sm text-foreground">Seen set: {step.seen.length ? step.seen.join(", ") : "(empty)"}</p>
-						<p className={`text-sm font-semibold ${getOutcomeClasses(step.outcome)}`}>{getOutcomeLabel(step.outcome)}</p>
-					</div>
+					<TracePanelContent>
+						<TraceLine>Current index: {step.index ?? "(done)"}</TraceLine>
+						<TraceLine>Current value: {step.value ?? "(none)"}</TraceLine>
+						<TraceLine>Action: {step.action}</TraceLine>
+						<TraceLine>Seen set: {step.seen.length ? step.seen.join(", ") : "(empty)"}</TraceLine>
+						<TraceLine variant={getOutcomeVariant(step.outcome)}>{getOutcomeLabel(step.outcome)}</TraceLine>
+					</TracePanelContent>
 				) : (
-					<p className="text-muted">No steps yet for this input.</p>
+					<TraceEmptyState />
 				)}
 			</StepVisualizerLayout>
-		</div>
+		</StepVisualizerPage>
 	);
 }
