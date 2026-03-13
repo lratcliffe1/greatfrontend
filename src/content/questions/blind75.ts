@@ -64,13 +64,22 @@ Constraints:
 		category: "Algorithmic coding",
 		difficulty: "Easy",
 		sourceUrl: "https://www.greatfrontend.com/interviews/blind75",
-		solutionType: "code_and_tests",
-		status: "todo",
-		summary: "TODO: Solve Find Missing Number in Sequence.",
-		cardSummary: "TODO: Add concise card summary.",
-		approach: "TODO",
-		complexity: "TODO",
-		tags: [],
+		solutionType: "algo_visualizer",
+		status: "done",
+		summary: `Given an array numbers of size n storing n different integers which fall within the range [0, n], implement a function to identify the missing element in the array. All numbers except one are present in the array. Find the missing number.
+
+Examples:
+- [1,3,0] => 2
+- [1] => 0
+- [3,0,4,2,1] => 5
+
+Constraints:
+- 1 <= n <= 10,000
+- 0 <= numbers[i] <= n`,
+		cardSummary: "Find the single missing integer in [0..n] from an array of n distinct values.",
+		approach: "Compute expected sum of 0..n as n*(n+1)/2, subtract the actual sum of the array. The difference is the missing number.",
+		complexity: "Time: O(n), Space: O(1).",
+		tags: ["arrays", "math", "sum"],
 	},
 	{
 		id: "blind-maximum-product-in-contiguous-array",

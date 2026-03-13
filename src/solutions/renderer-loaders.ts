@@ -17,4 +17,5 @@ export const SOLUTION_RENDERER_LOADERS: Partial<Record<RendererKey, RendererLoad
 	"gfe75/todo-list": () => import("@/solutions/gfe75/todo-list/renderer"),
 	"blind75/balanced-brackets": () => import("@/solutions/blind75/balanced-brackets/renderer"),
 	"blind75/find-duplicates-in-array": () => import("@/solutions/blind75/find-duplicates-in-array/renderer"),
+	"blind75/find-missing-number-in-sequence": () => import("@/solutions/blind75/find-missing-number-in-sequence/renderer"),
 };
