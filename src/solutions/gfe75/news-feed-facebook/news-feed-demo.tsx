@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useCallback, useEffect, useRef, useState } from "react";
+import { ChangeEvent, startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { AppButton } from "@/components/ui/tailwind-primitives";
 import type { FeedPost, ReactionKey } from "@/lib/graphql/api";
 import { useCreatePostMutation, useFeedPageQuery, useLazyFeedPageQuery, useReactToPostMutation } from "@/lib/graphql/api";
@@ -93,7 +93,7 @@ export function NewsFeedDemo() {
 		return () => observer.disconnect();
 	}, [hasMore, loadMore]);
 
-	function onCreatePost(event: React.FormEvent<HTMLFormElement>) {
+	function onCreatePost(event: ChangeEvent<HTMLFormElement>) {
 		event.preventDefault();
 		const content = newPostContent.trim();
 		const imageUrl = newPostImageUrl.trim();

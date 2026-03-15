@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useEffect, useRef, useState, type FormEvent } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { AppButton, MutedText } from "@/components/ui/tailwind-primitives";
 import { useAddTaskMutation, useClearTasksMutation, useRemoveTaskMutation, useTasksQuery } from "@/lib/graphql/api";
 
