@@ -60,9 +60,3 @@ export function getMaxProductSteps(numbers: number[]): MaxProductStep[] {
 
 	return steps;
 }
-
-export function maxProductSubarray(numbers: number[]): number {
-	const steps = getMaxProductSteps(numbers);
-	const lastStep = steps.at(-1);
-	return lastStep?.globalMax ?? 0;
-}

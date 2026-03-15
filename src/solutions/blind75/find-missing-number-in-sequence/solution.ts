@@ -70,12 +70,6 @@ export function getMissingNumberSteps(numbers: number[]): MissingNumberStep[] {
 	return steps;
 }
 
-export function findMissingNumber(numbers: number[]): number {
-	const steps = getMissingNumberSteps(numbers);
-	const lastStep = steps.at(-1);
-	return lastStep?.missing ?? 0;
-}
-
 export function getMissingNumberInputError(numbers: number[]): string | null {
 	const n = numbers.length;
 	if (n < MISSING_NUMBER_CONSTRAINTS.minLength || n > MISSING_NUMBER_CONSTRAINTS.maxLength) {

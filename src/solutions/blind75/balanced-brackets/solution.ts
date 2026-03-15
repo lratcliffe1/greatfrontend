@@ -93,12 +93,3 @@ export function getBalancedBracketSteps(input: string): BracketStep[] {
 
 	return steps;
 }
-
-export function isBalancedBrackets(input: string) {
-	if (getBalancedBracketInputError(input)) {
-		return false;
-	}
-
-	const steps = getBalancedBracketSteps(input);
-	return steps[steps.length - 1]?.validSoFar ?? false;
-}

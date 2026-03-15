@@ -50,8 +50,3 @@ export function getDuplicateScanSteps(numbers: number[]): DuplicateScanStep[] {
 	pushStep(9, null, null, "Return false: every value was unique.", "complete");
 	return steps;
 }
-
-export function hasDuplicate(numbers: number[]) {
-	const lastStep = getDuplicateScanSteps(numbers).at(-1);
-	return lastStep?.outcome === "duplicate";
-}
