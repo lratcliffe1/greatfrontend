@@ -49,7 +49,7 @@ describe("TrackQuestionsPage", () => {
 		render(<TrackQuestionsPage track="gfe75" questions={mockQuestions} />);
 
 		expect(screen.getByTestId("filter-search")).toHaveValue("reduce");
-		expect(within(screen.getByTestId("filter-status")).getByRole("combobox")).toHaveTextContent("Todo");
+		expect(within(screen.getByTestId("filter-status")).getByRole("combobox")).toHaveTextContent("To do");
 		expect(within(screen.getByTestId("filter-category")).getByRole("combobox")).toHaveTextContent("JavaScript functions");
 		expect(screen.queryByText(/Debounce/)).not.toBeInTheDocument();
 		expect(screen.getByText(/Array\.prototype\.reduce/)).toBeInTheDocument();

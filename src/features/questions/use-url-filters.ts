@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import { hydrateFiltersFromQuery } from "@/lib/store/filtersSlice";
 import { selectCategory, selectSearch, selectStatus, selectDifficulty } from "@/lib/store/selectors";
 import type { Question, Track } from "@/content/questions";
+import { DIFFICULTY_LEVELS } from "@/lib/constants/filters";
 
 export type TrackFilterValues = {
 	search: string;
@@ -19,7 +20,7 @@ function isTrackStatus(value: string | null): value is Question["status"] {
 }
 
 function isTrackDifficulty(value: string | null): value is Question["difficulty"] {
-	return value === "Easy" || value === "Medium" || value === "Hard";
+	return value !== null && (DIFFICULTY_LEVELS as readonly string[]).includes(value);
 }
 
 /** Track-specific URL param names so each track's filters persist when switching. */

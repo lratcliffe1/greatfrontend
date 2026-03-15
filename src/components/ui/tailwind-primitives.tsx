@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
+import { STATUS_LABELS } from "@/lib/constants/filters";
 
 type BaseProps = {
 	children: ReactNode;
@@ -94,8 +95,7 @@ const STATUS_CLASSES = {
 } as const;
 
 export function StatusBadge({ status }: { status: "done" | "todo" | "in_progress" }) {
-	const label = status === "todo" ? "To do" : status === "in_progress" ? "In progress" : "Done";
-	return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLASSES[status]}`}>{label}</span>;
+	return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLASSES[status]}`}>{STATUS_LABELS[status]}</span>;
 }
 
 export function AppButton({

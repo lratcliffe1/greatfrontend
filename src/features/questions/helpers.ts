@@ -1,23 +1,13 @@
 import type { Question } from "@/content/questions";
+import { STATUS_LABELS } from "@/lib/constants/filters";
 
 export function isHttpUrl(value: string) {
 	return /^https?:\/\//.test(value);
 }
 
 export function formatQuestionStatus(status: Question["status"] | "all") {
-	if (status === "in_progress") {
-		return "In progress";
-	}
-
-	if (status === "todo") {
-		return "To do";
-	}
-
-	if (status === "done") {
-		return "Done";
-	}
-
-	return "All";
+	if (status === "all") return "All";
+	return STATUS_LABELS[status];
 }
 
 export function getGraphQlErrorMessage(error: unknown) {

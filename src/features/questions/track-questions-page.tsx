@@ -14,20 +14,9 @@ import { getTrackLabel } from "@/lib/tracks";
 import { prefetchSolutionRenderer } from "@/features/questions/solution-registry";
 import { QUESTION_UI_CLASSES, SourcePromptLink } from "@/features/questions/question-ui";
 import { useFilterSync } from "@/features/questions/use-url-filters";
+import { DIFFICULTY_OPTIONS, STATUS_OPTIONS } from "@/lib/constants/filters";
 
 const SEARCH_DEBOUNCE_MS = 150;
-
-const STATUS_OPTIONS: { value: Question["status"]; label: string }[] = [
-	{ value: "todo", label: "Todo" },
-	{ value: "in_progress", label: "In progress" },
-	{ value: "done", label: "Done" },
-];
-
-const DIFFICULTY_OPTIONS: { value: Question["difficulty"]; label: string }[] = [
-	{ value: "Easy", label: "Easy" },
-	{ value: "Medium", label: "Medium" },
-	{ value: "Hard", label: "Hard" },
-];
 
 function getUniqueCategories(questions: Question[]) {
 	return Array.from(new Set(questions.map((question) => question.category))).sort();
