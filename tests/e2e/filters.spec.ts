@@ -27,17 +27,27 @@ test("filters questions by status", async ({ page }) => {
 	await expect(page.getByTestId("question-title-array-prototype-reduce")).toHaveCount(0);
 });
 
+test("filters questions by difficulty", async ({ page }) => {
+	await page.getByLabel("Filter by difficulty").selectOption("Easy");
+
+	// Debounce is Medium; array-prototype-reduce is Easy
+	await expect(page.getByTestId("question-title-array-prototype-reduce")).toBeVisible();
+	await expect(page.getByTestId("question-title-debounce")).toHaveCount(0);
+});
+
 test("keeps filters below the progress summary before the wide breakpoint", async ({ page }) => {
 	// Viewport < 712px so filters stack below progress (min-[712px] breakpoint)
 	await page.setViewportSize({ width: 600, height: 900 });
 
 	const progress = page.getByTestId("track-progress");
 	const categorySelect = page.getByTestId("filter-category");
+	const difficultySelect = page.getByTestId("filter-difficulty");
 	const statusSelect = page.getByTestId("filter-status");
 	const searchInput = page.getByTestId("filter-search");
 
 	await expect(progress).toBeVisible();
 	await expect(categorySelect).toBeVisible();
+	await expect(difficultySelect).toBeVisible();
 	await expect(statusSelect).toBeVisible();
 	await expect(searchInput).toBeVisible();
 
@@ -45,11 +55,12 @@ test("keeps filters below the progress summary before the wide breakpoint", asyn
 		.poll(async () => {
 			const pb = await progress.boundingBox();
 			const cb = await categorySelect.boundingBox();
+			const db = await difficultySelect.boundingBox();
 			const sb = await statusSelect.boundingBox();
 			const sib = await searchInput.boundingBox();
-			if (!pb || !cb || !sb || !sib) return null;
+			if (!pb || !cb || !db || !sb || !sib) return null;
 			const progressBottom = pb.y + pb.height;
-			const firstFilterTop = Math.min(cb.y, sb.y, sib.y);
+			const firstFilterTop = Math.min(cb.y, db.y, sb.y, sib.y);
 			return firstFilterTop > progressBottom + 4;
 		})
 		.toBe(true);

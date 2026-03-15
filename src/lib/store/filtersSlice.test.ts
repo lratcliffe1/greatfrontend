@@ -3,27 +3,31 @@ import filtersReducer, {
 	resetFilters,
 	resetFiltersForTrack,
 	setCategory,
+	setDifficulty,
 	setSearch,
 	setStatus,
 } from "@/lib/store/filtersSlice";
 
 describe("filtersSlice", () => {
-	it("updates search, category, and status for a single track", () => {
+	it("updates search, category, status, and difficulty for a single track", () => {
 		const withSearch = filtersReducer(undefined, setSearch({ track: "gfe75", value: "debounce" }));
 		const withCategory = filtersReducer(withSearch, setCategory({ track: "gfe75", value: "UI coding" }));
 		const withStatus = filtersReducer(withCategory, setStatus({ track: "gfe75", value: "done" }));
+		const withDifficulty = filtersReducer(withStatus, setDifficulty({ track: "gfe75", value: "Medium" }));
 
-		expect(withStatus).toEqual({
+		expect(withDifficulty).toEqual({
 			byTrack: {
 				gfe75: {
 					search: "debounce",
 					category: "UI coding",
 					status: "done",
+					difficulty: "Medium",
 				},
 				blind75: {
 					search: "",
 					category: "all",
 					status: "all",
+					difficulty: "all",
 				},
 			},
 		});
@@ -37,6 +41,7 @@ describe("filtersSlice", () => {
 				search: "twosum",
 				category: "ignored",
 				status: "in_progress",
+				difficulty: "Hard",
 			}),
 		);
 
@@ -44,6 +49,7 @@ describe("filtersSlice", () => {
 			search: "twosum",
 			category: "ignored",
 			status: "in_progress",
+			difficulty: "Hard",
 		});
 	});
 
@@ -55,6 +61,7 @@ describe("filtersSlice", () => {
 			search: "",
 			category: "all",
 			status: "all",
+			difficulty: "all",
 		});
 	});
 
@@ -69,11 +76,13 @@ describe("filtersSlice", () => {
 					search: "",
 					category: "all",
 					status: "all",
+					difficulty: "all",
 				},
 				blind75: {
 					search: "",
 					category: "all",
 					status: "all",
+					difficulty: "all",
 				},
 			},
 		});

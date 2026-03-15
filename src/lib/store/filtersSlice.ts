@@ -1,11 +1,12 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-import type { QuestionStatus, Track } from "@/content/questions";
+import type { Question, QuestionStatus, Track } from "@/content/questions";
 
 type TrackFilters = {
 	search: string;
 	category: string;
 	status: QuestionStatus | "all";
+	difficulty: Question["difficulty"] | "all";
 };
 
 type FiltersState = {
@@ -22,6 +23,7 @@ function createDefaultTrackFilters(): TrackFilters {
 		search: "",
 		category: "all",
 		status: "all",
+		difficulty: "all",
 	};
 }
 
@@ -45,6 +47,9 @@ const filtersSlice = createSlice({
 		setStatus(state, action: PayloadAction<TrackScopedPayload<QuestionStatus | "all">>) {
 			state.byTrack[action.payload.track].status = action.payload.value;
 		},
+		setDifficulty(state, action: PayloadAction<TrackScopedPayload<Question["difficulty"] | "all">>) {
+			state.byTrack[action.payload.track].difficulty = action.payload.value;
+		},
 		hydrateFiltersFromQuery(
 			state,
 			action: PayloadAction<{
@@ -52,12 +57,14 @@ const filtersSlice = createSlice({
 				search: string;
 				category: string;
 				status: QuestionStatus | "all";
+				difficulty: Question["difficulty"] | "all";
 			}>,
 		) {
 			state.byTrack[action.payload.track] = {
 				search: action.payload.search,
 				category: action.payload.category,
 				status: action.payload.status,
+				difficulty: action.payload.difficulty,
 			};
 		},
 		// Kept for future UX flows (e.g. "Clear filters" button).
@@ -71,6 +78,6 @@ const filtersSlice = createSlice({
 	},
 });
 
-export const { setSearch, setCategory, setStatus, hydrateFiltersFromQuery, resetFilters, resetFiltersForTrack } = filtersSlice.actions;
+export const { setSearch, setCategory, setStatus, setDifficulty, hydrateFiltersFromQuery, resetFilters, resetFiltersForTrack } = filtersSlice.actions;
 
 export default filtersSlice.reducer;

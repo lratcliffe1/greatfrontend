@@ -1,6 +1,6 @@
-import { selectCategory, selectHasActiveFilters, selectSearch, selectStatus } from "@/lib/store/selectors";
+import { selectCategory, selectDifficulty, selectHasActiveFilters, selectSearch, selectStatus } from "@/lib/store/selectors";
 import { graphqlApi } from "@/lib/graphql/api";
-import filtersReducer, { resetFilters, setCategory, setSearch, setStatus } from "@/lib/store/filtersSlice";
+import filtersReducer, { resetFilters, setCategory, setDifficulty, setSearch, setStatus } from "@/lib/store/filtersSlice";
 import type { Track } from "@/content/questions";
 
 function getState(filters: ReturnType<typeof filtersReducer>) {
@@ -26,6 +26,16 @@ describe("selectors", () => {
 	it("selectStatus returns status value", () => {
 		const state = getState(filtersReducer(undefined, setStatus({ track, value: "done" })));
 		expect(selectStatus(state, track)).toBe("done");
+	});
+
+	it("selectDifficulty returns difficulty value", () => {
+		const state = getState(filtersReducer(undefined, setDifficulty({ track, value: "Hard" })));
+		expect(selectDifficulty(state, track)).toBe("Hard");
+	});
+
+	it("selectHasActiveFilters returns true when difficulty is not all", () => {
+		const state = getState(filtersReducer(undefined, setDifficulty({ track, value: "Easy" })));
+		expect(selectHasActiveFilters(state, track)).toBe(true);
 	});
 
 	it("selectHasActiveFilters returns false when all default", () => {

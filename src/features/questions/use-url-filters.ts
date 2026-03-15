@@ -4,23 +4,28 @@ import { startTransition, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/store/hooks";
 import { hydrateFiltersFromQuery } from "@/lib/store/filtersSlice";
-import { selectCategory, selectSearch, selectStatus } from "@/lib/store/selectors";
+import { selectCategory, selectSearch, selectStatus, selectDifficulty } from "@/lib/store/selectors";
 import type { Question, Track } from "@/content/questions";
 
 export type TrackFilterValues = {
 	search: string;
 	category: string;
 	status: Question["status"] | "all";
+	difficulty: Question["difficulty"] | "all";
 };
 
 function isTrackStatus(value: string | null): value is Question["status"] {
 	return value === "todo" || value === "in_progress" || value === "done";
 }
 
+function isTrackDifficulty(value: string | null): value is Question["difficulty"] {
+	return value === "Easy" || value === "Medium" || value === "Hard";
+}
+
 /** Track-specific URL param names so each track's filters persist when switching. */
 const URL_PARAMS = {
-	gfe75: { search: "searchGfe", category: "categoryGfe", status: "statusGfe" },
-	blind75: { search: "searchBlind", status: "statusBlind" },
+	gfe75: { search: "searchGfe", category: "categoryGfe", status: "statusGfe", difficulty: "difficultyGfe" },
+	blind75: { search: "searchBlind", status: "statusBlind", difficulty: "difficultyBlind" },
 } as const;
 
 export function getUrlFilters(
@@ -34,6 +39,7 @@ export function getUrlFilters(
 		search: "",
 		category: "all",
 		status: "all",
+		difficulty: "all",
 	};
 
 	if (typeof window === "undefined" && searchString === undefined) {
@@ -44,7 +50,9 @@ export function getUrlFilters(
 	const params = new URLSearchParams(queryString);
 	const keys = URL_PARAMS[track];
 	const statusParam = params.get(keys.status);
-	const hasFilterParams = params.has(keys.search) || params.has(keys.status) || (track === "gfe75" && params.has(URL_PARAMS.gfe75.category));
+	const difficultyParam = params.get(keys.difficulty);
+	const hasFilterParams =
+		params.has(keys.search) || params.has(keys.status) || params.has(keys.difficulty) || (track === "gfe75" && params.has(URL_PARAMS.gfe75.category));
 
 	return {
 		hasFilterParams,
@@ -52,6 +60,7 @@ export function getUrlFilters(
 			search: params.get(keys.search) ?? "",
 			category: track === "blind75" ? "all" : (params.get(URL_PARAMS.gfe75.category) ?? "all"),
 			status: isTrackStatus(statusParam) ? statusParam : "all",
+			difficulty: isTrackDifficulty(difficultyParam) ? difficultyParam : "all",
 		},
 	};
 }
@@ -84,6 +93,12 @@ export function syncFiltersToUrl(track: Track, filters: TrackFilterValues) {
 		params.delete(keys.status);
 	}
 
+	if (filters.difficulty !== "all") {
+		params.set(keys.difficulty, filters.difficulty);
+	} else {
+		params.delete(keys.difficulty);
+	}
+
 	const nextQuery = params.toString();
 	const nextUrl = nextQuery ? `${window.location.pathname}?${nextQuery}` : window.location.pathname;
 	window.history.replaceState(window.history.state, "", nextUrl);
@@ -104,6 +119,7 @@ export function useFilterSync(track: Track) {
 	const search = useAppSelector((state) => selectSearch(state, track));
 	const category = useAppSelector((state) => selectCategory(state, track));
 	const status = useAppSelector((state) => selectStatus(state, track));
+	const difficulty = useAppSelector((state) => selectDifficulty(state, track));
 
 	const [hasHydrated, setHasHydrated] = useState(false);
 
@@ -118,6 +134,7 @@ export function useFilterSync(track: Track) {
 	const effectiveSearch = shouldUseInitialUrlFilters ? initialUrlFilters.search : search;
 	const effectiveCategory = shouldUseInitialUrlFilters ? initialUrlFilters.category : category;
 	const effectiveStatus = shouldUseInitialUrlFilters ? initialUrlFilters.status : status;
+	const effectiveDifficulty = shouldUseInitialUrlFilters ? initialUrlFilters.difficulty : difficulty;
 
 	// Hydrate Redux from URL once when we have URL params
 	useEffect(() => {
@@ -129,6 +146,7 @@ export function useFilterSync(track: Track) {
 					search: initialUrlFilters.search,
 					category: initialUrlFilters.category,
 					status: initialUrlFilters.status,
+					difficulty: initialUrlFilters.difficulty,
 				}),
 			);
 		}
@@ -136,8 +154,13 @@ export function useFilterSync(track: Track) {
 
 	// Sync Redux to URL when filters change
 	useEffect(() => {
-		syncFiltersToUrl(track, { search: effectiveSearch, category: effectiveCategory, status: effectiveStatus });
-	}, [effectiveCategory, effectiveSearch, effectiveStatus, track]);
+		syncFiltersToUrl(track, {
+			search: effectiveSearch,
+			category: effectiveCategory,
+			status: effectiveStatus,
+			difficulty: effectiveDifficulty,
+		});
+	}, [effectiveCategory, effectiveDifficulty, effectiveSearch, effectiveStatus, track]);
 
-	return { effectiveSearch, effectiveCategory, effectiveStatus };
+	return { effectiveSearch, effectiveCategory, effectiveStatus, effectiveDifficulty };
 }

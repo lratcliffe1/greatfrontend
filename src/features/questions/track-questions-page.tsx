@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 
 import type { Question, Track } from "@/content/questions";
+import { FilterSelect } from "@/components/ui/filter-select";
 import { DifficultyPill, ElevatedCard, MutedText, StatusBadge } from "@/components/ui/tailwind-primitives";
 import { useAppDispatch } from "@/lib/store/hooks";
-import { setCategory, setSearch, setStatus } from "@/lib/store/filtersSlice";
+import { setCategory, setDifficulty, setSearch, setStatus } from "@/lib/store/filtersSlice";
 import { TrackTabs } from "@/components/track-tabs";
 import { getTrackLabel } from "@/lib/tracks";
 import { prefetchSolutionRenderer } from "@/features/questions/solution-registry";
@@ -22,6 +23,12 @@ const STATUS_OPTIONS: { value: Question["status"]; label: string }[] = [
 	{ value: "done", label: "Done" },
 ];
 
+const DIFFICULTY_OPTIONS: { value: Question["difficulty"]; label: string }[] = [
+	{ value: "Easy", label: "Easy" },
+	{ value: "Medium", label: "Medium" },
+	{ value: "Hard", label: "Hard" },
+];
+
 function getUniqueCategories(questions: Question[]) {
 	return Array.from(new Set(questions.map((question) => question.category))).sort();
 }
@@ -29,7 +36,7 @@ function getUniqueCategories(questions: Question[]) {
 export function TrackQuestionsPage({ track, questions }: { track: Track; questions: Question[] }) {
 	const router = useRouter();
 	const dispatch = useAppDispatch();
-	const { effectiveSearch, effectiveCategory, effectiveStatus } = useFilterSync(track);
+	const { effectiveSearch, effectiveCategory, effectiveStatus, effectiveDifficulty } = useFilterSync(track);
 
 	// Local state for search input so typing feels instant (good INP); debounce Redux updates.
 	const [searchInput, setSearchInput] = useState(effectiveSearch);
@@ -65,10 +72,11 @@ export function TrackQuestionsPage({ track, questions }: { track: Track; questio
 				question.tags.some((tag) => tag.toLowerCase().includes(effectiveSearch.toLowerCase()));
 			const matchesCategory = track === "blind75" || effectiveCategory === "all" || question.category === effectiveCategory;
 			const matchesStatus = effectiveStatus === "all" || question.status === effectiveStatus;
+			const matchesDifficulty = effectiveDifficulty === "all" || question.difficulty === effectiveDifficulty;
 
-			return matchesSearch && matchesCategory && matchesStatus;
+			return matchesSearch && matchesCategory && matchesStatus && matchesDifficulty;
 		});
-	}, [effectiveCategory, effectiveSearch, effectiveStatus, questions, track]);
+	}, [effectiveCategory, effectiveDifficulty, effectiveSearch, effectiveStatus, questions, track]);
 
 	const completedCount = filtered.filter((question) => question.status === "done").length;
 
@@ -89,73 +97,49 @@ export function TrackQuestionsPage({ track, questions }: { track: Track; questio
 				>
 					{completedCount}/{filtered.length} complete
 				</p>
-				<div className="flex min-w-0 max-w-full basis-full shrink-0 flex-wrap items-end gap-3 min-[712px]:ml-auto min-[712px]:basis-auto">
+				<div className="grid min-w-0 max-w-full grid-cols-1 basis-full shrink-0 gap-3 min-[400px]:grid-cols-2 min-[712px]:ml-auto min-[712px]:basis-auto min-[900px]:grid-cols-4 sm:gap-4">
 					{track !== "blind75" && (
-						<div
-							data-testid="filter-category"
-							className="order-1 min-w-0 w-48 basis-full min-[712px]:basis-auto"
-							role="group"
-							aria-labelledby="category-label-heading"
-						>
-							<label id="category-label-heading" htmlFor="category-label" className="mb-1 block text-xs text-muted">
-								Category
-							</label>
-							<select
-								id="category-label"
-								value={effectiveCategory}
-								onChange={(event) => {
-									startTransition(() => {
-										dispatch(setCategory({ track, value: String(event.target.value) }));
-									});
-								}}
-								aria-label="Filter by category"
-								className="h-10 w-full min-w-0 appearance-none rounded border border-card-border bg-background bg-size-[1.25rem] bg-position-[right_0.5rem_center] bg-no-repeat px-3 py-2 pr-8 text-xs text-foreground focus:border-teal-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 dark:focus:border-teal-500 dark:focus-visible:ring-teal-500 sm:text-sm bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%2394a3b8%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')]"
-							>
-								<option value="all">All</option>
-								{categories.map((cat) => (
-									<option key={cat} value={cat}>
-										{cat}
-									</option>
-								))}
-							</select>
-						</div>
+						<FilterSelect
+							id="category-label"
+							label="Category"
+							ariaLabel="Filter by category"
+							value={effectiveCategory}
+							onChange={(value) =>
+								startTransition(() => {
+									dispatch(setCategory({ track, value }));
+								})
+							}
+							options={categories.map((cat) => ({ value: cat, label: cat }))}
+							dataTestId="filter-category"
+						/>
 					)}
-					<div
-						data-testid="filter-status"
-						className="order-2 min-w-0 w-48 basis-full min-[712px]:basis-auto"
-						role="group"
-						aria-labelledby="status-label-heading"
-					>
-						<label id="status-label-heading" htmlFor="status-label" className="mb-1 block text-xs text-muted">
-							Status
-						</label>
-						<select
-							id="status-label"
-							value={effectiveStatus}
-							onChange={(event) => {
-								const value = event.target.value;
-								if (value === "all" || value === "todo" || value === "in_progress" || value === "done") {
-									startTransition(() => {
-										dispatch(setStatus({ track, value }));
-									});
-								}
-							}}
-							aria-label="Filter by status"
-							className="h-10 w-full min-w-0 appearance-none rounded border border-card-border bg-background bg-size-[1.25rem] bg-position-[right_0.5rem_center] bg-no-repeat px-3 py-2 pr-8 text-xs text-foreground focus:border-teal-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 dark:focus:border-teal-500 dark:focus-visible:ring-teal-500 sm:text-sm bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%2394a3b8%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')]"
-						>
-							<option value="all">All</option>
-							{STATUS_OPTIONS.map(({ value, label }) => (
-								<option key={value} value={value}>
-									{label}
-								</option>
-							))}
-						</select>
-					</div>
-					<div
-						className="group order-3 min-w-0 w-48 basis-full min-[712px]:basis-auto"
-						role="search"
-						aria-labelledby="search-questions-label"
-					>
+					<FilterSelect
+						id="difficulty-label"
+						label="Difficulty"
+						ariaLabel="Filter by difficulty"
+						value={effectiveDifficulty}
+						onChange={(value) =>
+							startTransition(() => {
+								dispatch(setDifficulty({ track, value }));
+							})
+						}
+						options={DIFFICULTY_OPTIONS}
+						dataTestId="filter-difficulty"
+					/>
+					<FilterSelect
+						id="status-label"
+						label="Status"
+						ariaLabel="Filter by status"
+						value={effectiveStatus}
+						onChange={(value) =>
+							startTransition(() => {
+								dispatch(setStatus({ track, value }));
+							})
+						}
+						options={STATUS_OPTIONS}
+						dataTestId="filter-status"
+					/>
+					<div className="group min-w-0" role="search" aria-labelledby="search-questions-label">
 						<div className="w-fit px-1 bg-background">
 							<label
 								id="search-questions-label"
