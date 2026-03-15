@@ -1,7 +1,6 @@
 /**
- * In-memory demo data for Todo and News Feed.
+ * In-memory demo data for News Feed.
  * Data flows through GraphQL as if from a real DB; swap resolvers when adding a DB.
- * Todo tasks are isolated per session (cookie) so each browser has its own list.
  */
 
 import type { GraphQLContext } from "@/lib/graphql/types";
@@ -9,7 +8,6 @@ import type { GraphQLContext } from "@/lib/graphql/types";
 const PAGE_SIZE = 4;
 const VALID_REACTIONS = ["like", "haha", "wow"] as const;
 
-export type TodoTask = { id: number; label: string };
 export type ReactionKey = (typeof VALID_REACTIONS)[number];
 export type FeedPost = {
 	id: string;
@@ -21,18 +19,6 @@ export type FeedPost = {
 	reactionByMe: ReactionKey | null;
 };
 export type FeedPage = { posts: FeedPost[]; nextCursor: string | null };
-
-type SessionStore = { tasks: TodoTask[]; nextId: number };
-const sessionsStore = new Map<string, SessionStore>();
-
-function getSessionStore(sessionId: string): SessionStore {
-	let store = sessionsStore.get(sessionId);
-	if (!store) {
-		store = { tasks: [], nextId: 1 };
-		sessionsStore.set(sessionId, store);
-	}
-	return store;
-}
 
 function createSeedPost(index: number): FeedPost {
 	return {
@@ -62,12 +48,8 @@ function getFeedForSession(sessionId: string): FeedPost[] {
 	return feed;
 }
 
-export const demoResolvers = {
+export const feedResolvers = {
 	Query: {
-		tasks: (_: unknown, __: unknown, context: GraphQLContext): TodoTask[] => {
-			const sessionId = context?.sessionId ?? "default";
-			return [...getSessionStore(sessionId).tasks];
-		},
 		feedPage: (_: unknown, { cursor }: { cursor?: string | null }, context: GraphQLContext): FeedPage => {
 			const sessionId = context?.sessionId ?? "default";
 			const feed = getFeedForSession(sessionId);
@@ -84,28 +66,6 @@ export const demoResolvers = {
 		},
 	},
 	Mutation: {
-		addTask: (_: unknown, { label }: { label: string }, context: GraphQLContext): TodoTask => {
-			const sessionId = context?.sessionId ?? "default";
-			const store = getSessionStore(sessionId);
-			const trimmed = label.trim();
-			if (!trimmed) throw new Error("Label cannot be empty");
-			const task: TodoTask = { id: store.nextId++, label: trimmed };
-			store.tasks = [...store.tasks, task];
-			return task;
-		},
-		removeTask: (_: unknown, { id }: { id: number }, context: GraphQLContext): boolean => {
-			const sessionId = context?.sessionId ?? "default";
-			const store = getSessionStore(sessionId);
-			store.tasks = store.tasks.filter((t) => t.id !== id);
-			return true;
-		},
-		clearTasks: (_: unknown, __: unknown, context: GraphQLContext): boolean => {
-			const sessionId = context?.sessionId ?? "default";
-			const store = getSessionStore(sessionId);
-			store.tasks = [];
-			store.nextId = 1;
-			return true;
-		},
 		createPost: (_: unknown, { content, imageUrl }: { content?: string; imageUrl?: string }, context: GraphQLContext): FeedPost => {
 			const sessionId = context?.sessionId ?? "default";
 			const feed = getFeedForSession(sessionId);

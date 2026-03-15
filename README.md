@@ -69,7 +69,7 @@ Playwright commands require browsers to be installed once via `npx playwright in
 
 ## GraphQL & data
 
-Todo and News Feed demos use in-memory data that flows through GraphQL as if from a database. Persistence is isolated in `src/lib/graphql/demo-resolvers.ts`—a single module with minimal surface area. To add a database later, replace the demo resolvers with DB-backed resolvers that implement the same Query/Mutation shape; the schema, API route, and client code stay unchanged.
+Todo and News Feed demos use in-memory data that flows through GraphQL as if from a database. Persistence is isolated in `src/lib/graphql/resolvers/`—domain-specific modules (todo, feed) composed by `demo-resolvers.ts`. To add a database later, replace the demo resolvers with DB-backed resolvers that implement the same Query/Mutation shape; the schema, API route, and client code stay unchanged.
 
 ## State management notes
 

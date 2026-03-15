@@ -1,7 +1,7 @@
 import { buildSchema, defaultFieldResolver, graphql, type GraphQLResolveInfo } from "graphql";
 
 import { getQuestionByPath, getQuestionsByTrack, type Question, type Track } from "@/content/questions";
-import { demoResolvers } from "@/lib/graphql/demo-resolvers";
+import { demoResolvers } from "@/lib/graphql/resolvers/demo-resolvers";
 import type { GraphQLContext } from "@/lib/graphql/types";
 
 const schema = buildSchema(`
