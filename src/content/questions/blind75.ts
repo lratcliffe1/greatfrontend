@@ -117,13 +117,23 @@ Constraints: 1 <= numbers.length <= 1000, -10 <= numbers[i] <= 10`,
 		category: "Algorithmic coding",
 		difficulty: "Medium",
 		sourceUrl: "https://www.greatfrontend.com/interviews/blind75",
-		solutionType: "code_and_tests",
-		status: "todo",
-		summary: "TODO: Solve Maximum Sum in Contiguous Array.",
-		cardSummary: "TODO: Add concise card summary.",
-		approach: "TODO",
-		complexity: "TODO",
-		tags: [],
+		solutionType: "algo_visualizer",
+		status: "done",
+		summary: `Given an array of integers numbers, determine the subarray that has the highest sum and return that sum.
+
+A subarray is a contiguous segment of an array where all elements are taken from consecutive indices, preserving their order.
+
+Examples:
+- [-1,5,-3,9,-11] => 11 (subarray [5,-3,9])
+- [9] => 9
+- [1,2,3,4] => 10 (subarray [1,2,3,4])
+
+Constraints: 1 <= numbers.length <= 10,000, -10,000 <= numbers[i] <= 10,000`,
+		cardSummary: "Find the maximum sum of any contiguous subarray using Kadane's algorithm.",
+		approach:
+			"Kadane's algorithm: at each index, maxEnding = max(n, maxEnding + n). Either extend the current subarray or start fresh. Track globalMax.",
+		complexity: "Time: O(n), Space: O(1).",
+		tags: ["arrays", "dynamic-programming"],
 	},
 	{
 		id: "blind-most-common-elements",
