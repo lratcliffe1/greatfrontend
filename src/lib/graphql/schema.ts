@@ -1,52 +1,9 @@
 import { buildSchema, defaultFieldResolver, graphql, type GraphQLResolveInfo } from "graphql";
 
-import { getQuestionByPath, getQuestionsByTrack, type Question, type Track } from "@/content/questions";
 import { demoResolvers } from "@/lib/graphql/resolvers/demo-resolvers";
 import type { GraphQLContext } from "@/lib/graphql/types";
 
 const schema = buildSchema(`
-	enum Track {
-		gfe75
-		blind75
-	}
-
-	enum Difficulty {
-		Easy
-		Medium
-		Hard
-	}
-
-	enum QuestionStatus {
-		todo
-		in_progress
-		done
-	}
-
-	enum SolutionType {
-		ui_demo
-		algo_visualizer
-		code_and_tests
-		writeup
-	}
-
-	type Question {
-		id: String!
-		questionNumber: Int!
-		path: String!
-		title: String!
-		track: Track!
-		category: String!
-		difficulty: Difficulty!
-		sourceUrl: String!
-		solutionType: SolutionType!
-		status: QuestionStatus!
-		summary: String!
-		cardSummary: String!
-		approach: String!
-		complexity: String!
-		tags: [String!]!
-	}
-
 	type TodoTask {
 		id: Int!
 		label: String!
@@ -74,8 +31,6 @@ const schema = buildSchema(`
 	}
 
 	type Query {
-		questions(track: Track!): [Question!]!
-		question(track: Track!, path: String!): Question
 		tasks: [TodoTask!]!
 		feedPage(cursor: String): FeedPage!
 	}
@@ -100,8 +55,6 @@ function rootFieldResolver(source: unknown, args: Record<string, unknown>, conte
 }
 
 const root = {
-	questions: (_: unknown, { track }: { track: Track }): Question[] => getQuestionsByTrack(track),
-	question: (_: unknown, { track, path }: { track: Track; path: string }): Question | null => getQuestionByPath(track, path),
 	...demoResolvers.Query,
 	...demoResolvers.Mutation,
 };

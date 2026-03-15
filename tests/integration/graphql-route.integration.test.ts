@@ -62,14 +62,13 @@ describe("GraphQL API route", () => {
 
 	it("executes valid query and returns data", async () => {
 		mockExecuteGraphQLQuery.mockResolvedValue({
-			data: { questions: [{ id: "gfe-debounce", title: "Debounce" }] },
+			data: { tasks: [{ id: 1, label: "Test task" }] },
 		});
 
 		const request = new Request("http://localhost/api/graphql", {
 			method: "POST",
 			body: JSON.stringify({
-				query: "query GetQuestions($track: Track!) { questions(track: $track) { id title } }",
-				variables: { track: "gfe75" },
+				query: "query GetTasks { tasks { id label } }",
 			}),
 			headers: { "Content-Type": "application/json" },
 		});
@@ -78,10 +77,10 @@ describe("GraphQL API route", () => {
 		const data = await response.json();
 
 		expect(response.status).toBe(200);
-		expect(data.data).toEqual({ questions: [{ id: "gfe-debounce", title: "Debounce" }] });
+		expect(data.data).toEqual({ tasks: [{ id: 1, label: "Test task" }] });
 		expect(mockExecuteGraphQLQuery).toHaveBeenCalledWith(
-			"query GetQuestions($track: Track!) { questions(track: $track) { id title } }",
-			{ track: "gfe75" },
+			"query GetTasks { tasks { id label } }",
+			undefined,
 			expect.objectContaining({ sessionId: expect.any(String) }),
 		);
 	});
