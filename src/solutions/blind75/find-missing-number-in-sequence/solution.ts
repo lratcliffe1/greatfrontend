@@ -70,18 +70,10 @@ export function getMissingNumberSteps(numbers: number[]): MissingNumberStep[] {
 	return steps;
 }
 
-/**
- * Find the missing number in a sequence [0, n].
- * Array has n elements, each in [0, n], with exactly one number missing.
- *
- * Approach: Expected sum of 0..n is n*(n+1)/2. Subtract actual sum to get the missing number.
- * Time: O(n), Space: O(1)
- */
 export function findMissingNumber(numbers: number[]): number {
-	const n = numbers.length;
-	const expectedSum = (n * (n + 1)) / 2;
-	const actualSum = numbers.reduce((acc, x) => acc + x, 0);
-	return expectedSum - actualSum;
+	const steps = getMissingNumberSteps(numbers);
+	const lastStep = steps.at(-1);
+	return lastStep?.missing ?? 0;
 }
 
 export function getMissingNumberInputError(numbers: number[]): string | null {

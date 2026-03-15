@@ -1,0 +1,99 @@
+"use client";
+
+import { startTransition, useMemo, useState } from "react";
+
+import { StepVisualizerInput } from "@/components/visualizer/step-visualizer-input";
+import {
+	StepVisualizerLayout,
+	TraceEmptyState,
+	TracePanelContent,
+	TraceLine,
+	StepVisualizerPage,
+	type CodeLine,
+} from "@/components/visualizer/step-visualizer-layout";
+import { useTraceFlash } from "@/components/visualizer/use-trace-flash";
+import { useStepNavigation } from "@/components/visualizer/use-step-navigation";
+import { parseCommaSeparatedIntegers } from "@/lib/parse-comma-separated-integers";
+import { MAX_PRODUCT_ARRAY_CONSTRAINTS, getMaxProductSteps } from "@/solutions/blind75/maximum-product-in-contiguous-array/solution";
+
+const CODE_LINES: CodeLine[] = [
+	{ line: 1, code: "export function maxProductSubarray(numbers: number[]) {" },
+	{ line: 2, code: "  let maxEnding = minEnding = globalMax = numbers[0];" },
+	{ line: 3, code: "  for (let i = 1; i < numbers.length; i++) {" },
+	{ line: 4, code: "    const n = numbers[i];" },
+	{ line: 5, code: "    maxEnding = max(n, prevMax*n, prevMin*n);" },
+	{ line: 6, code: "    minEnding = min(n, prevMax*n, prevMin*n);" },
+	{ line: 7, code: "    globalMax = max(globalMax, maxEnding);" },
+	{ line: 8, code: "  }" },
+	{ line: 9, code: "  return globalMax;" },
+	{ line: 10, code: "}" },
+];
+
+const INITIAL_INPUT = "1, 2, -3, 5, 1";
+
+export function MaximumProductInContiguousArrayVisualizer() {
+	const [input, setInput] = useState(INITIAL_INPUT);
+	const [stepIndex, setStepIndex] = useState(0);
+	const { flash, tracePanelClassName } = useTraceFlash();
+	const [appliedNumbers, setAppliedNumbers] = useState(() => {
+		const result = parseCommaSeparatedIntegers(INITIAL_INPUT, MAX_PRODUCT_ARRAY_CONSTRAINTS);
+		return result.data ?? [];
+	});
+
+	const parsedInput = useMemo(() => parseCommaSeparatedIntegers(input, MAX_PRODUCT_ARRAY_CONSTRAINTS), [input]);
+	const steps = useMemo(() => getMaxProductSteps(appliedNumbers), [appliedNumbers]);
+	const { step, onPrev, onNext, canPrev, canNext } = useStepNavigation(steps, stepIndex, setStepIndex);
+	const activeLine = step?.line ?? null;
+
+	return (
+		<StepVisualizerPage>
+			<StepVisualizerInput
+				label="Numbers input"
+				hint="Comma-separated integers. Constraints: 1–1000 elements, each in [-10, 10]."
+				inputId="max-product-array-input"
+				placeholder="Try: 1, 2, -3, 5, 1 or 1, 2, 0, -1, 8, -4"
+				value={input}
+				onChange={setInput}
+				error={parsedInput.error}
+				onApply={() => {
+					if (parsedInput.error || parsedInput.data === null) return;
+					startTransition(() => {
+						setAppliedNumbers(parsedInput.data);
+						setStepIndex(0);
+						flash();
+					});
+				}}
+				applyDisabled={Boolean(parsedInput.error)}
+			/>
+
+			<StepVisualizerLayout
+				codeTitle="Maximum Product Subarray implementation"
+				codeLines={CODE_LINES}
+				activeLine={activeLine}
+				tracePanelClassName={tracePanelClassName}
+				stepIndex={stepIndex}
+				totalSteps={steps.length}
+				onPrev={onPrev}
+				onNext={onNext}
+				canPrev={canPrev}
+				canNext={canNext}
+			>
+				{step ? (
+					<TracePanelContent>
+						{step.index !== null && (
+							<TraceLine>
+								Index: {step.index}, value: {step.value}
+							</TraceLine>
+						)}
+						<TraceLine>{step.action}</TraceLine>
+						<TraceLine>maxEnding = {step.maxEndingHere}</TraceLine>
+						<TraceLine>minEnding = {step.minEndingHere}</TraceLine>
+						<TraceLine variant="emphasized">globalMax = {step.globalMax}</TraceLine>
+					</TracePanelContent>
+				) : (
+					<TraceEmptyState />
+				)}
+			</StepVisualizerLayout>
+		</StepVisualizerPage>
+	);
+}

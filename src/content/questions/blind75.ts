@@ -90,13 +90,23 @@ Constraints:
 		category: "Algorithmic coding",
 		difficulty: "Medium",
 		sourceUrl: "https://www.greatfrontend.com/interviews/blind75",
-		solutionType: "code_and_tests",
-		status: "todo",
-		summary: "TODO: Solve Maximum Product in Contiguous Array.",
-		cardSummary: "TODO: Add concise card summary.",
-		approach: "TODO",
-		complexity: "TODO",
-		tags: [],
+		solutionType: "algo_visualizer",
+		status: "done",
+		summary: `Given an array of integers numbers, determine the subarray that has the highest product and return that product.
+
+A subarray is a contiguous segment of an array where all elements are taken from consecutive indices, preserving their order.
+
+Examples:
+- [1,2,-3,5,1] => 5 (subarray [5,1])
+- [9] => 9
+- [1,2,0,-1,8,-4] => 32 (subarray [-1,8,-4])
+
+Constraints: 1 <= numbers.length <= 1000, -10 <= numbers[i] <= 10`,
+		cardSummary: "Find the maximum product of any contiguous subarray using DP with max/min tracking.",
+		approach:
+			"Track both max and min product ending at each index. A negative min × negative can become the new max. At each step: maxEnding = max(n, maxEnding*n, minEnding*n), minEnding = min(n, maxEnding*n, minEnding*n).",
+		complexity: "Time: O(n), Space: O(1).",
+		tags: ["arrays", "dynamic-programming"],
 	},
 	{
 		id: "blind-maximum-sum-in-contiguous-array",
