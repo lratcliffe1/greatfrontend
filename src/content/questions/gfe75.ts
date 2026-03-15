@@ -88,13 +88,16 @@ Implement a debounce function that accepts a callback and a wait duration, and r
 		category: "JavaScript functions",
 		difficulty: "Medium",
 		sourceUrl: "https://www.greatfrontend.com/interviews/gfe75",
-		solutionType: "code_and_tests",
-		status: "todo",
-		summary: "TODO: Solve Throttle.",
-		cardSummary: "Implement a function to control the execution of a function by limiting how many times it can execute over time",
-		approach: "TODO",
-		complexity: "TODO",
-		tags: [],
+		solutionType: "algo_visualizer",
+		status: "done",
+		summary: `Throttling controls how often a function can be invoked over time. When throttled with a wait of X ms, the callback executes immediately on the first call and cannot be invoked again until X ms have passed.
+
+Example: throttle(increment, 100) — at t=0 call executes (i=1), at t=50 call is skipped, at t=101 call executes (i=2).`,
+		cardSummary: "Implement a function to limit invocations to at most once per wait period, executing immediately.",
+		approach:
+			"Track lastExecutedAt. On each invocation: if lastExecutedAt is null or (now - lastExecutedAt) >= waitMs, execute callback and set lastExecutedAt = now; else skip.",
+		complexity: "Time: O(1) per call, Space: O(1).",
+		tags: ["timers", "closures", "utility"],
 	},
 	{
 		id: "gfe-todo-list",

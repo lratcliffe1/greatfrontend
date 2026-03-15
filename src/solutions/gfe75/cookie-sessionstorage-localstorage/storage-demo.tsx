@@ -92,8 +92,8 @@ export function StorageComparisonDemo() {
 	return (
 		<div className="space-y-5">
 			<p className="text-sm text-foreground">
-				Cookies, <code>localStorage</code>, and <code>sessionStorage</code> all store client-side string key/value data, but differ in request
-				behavior, scope, lifetime, and security characteristics.
+				Cookies, local storage, and session storage all store client-side string key/value data, but differ in request behavior, scope, lifetime, and
+				security characteristics.
 			</p>
 			<p className="mt-2 text-xs text-muted">Use the table for interview framing, then try the live controls below.</p>
 
@@ -217,8 +217,8 @@ export function StorageComparisonDemo() {
 			<p className="font-semibold text-foreground pt-4">Practical guidance</p>
 			<ul className="mt-2 space-y-1 text-muted">
 				<li>Cookies are best for small server-relevant values (session IDs, server-read flags) and can use HttpOnly/Secure/SameSite attributes.</li>
-				<li>localStorage fits persistent client preferences such as theme and layout state.</li>
-				<li>sessionStorage fits temporary tab-local state such as in-progress form data.</li>
+				<li>Local Storage fits persistent client preferences such as theme and layout state.</li>
+				<li>Session Storage fits temporary tab-local state such as in-progress form data.</li>
 				<li>Both Web Storage APIs are JavaScript-accessible, so avoid storing highly sensitive secrets there.</li>
 			</ul>
 		</div>
