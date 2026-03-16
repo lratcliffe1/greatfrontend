@@ -14,13 +14,18 @@ function getRendererKey(question: Question): string {
 }
 
 function getLoader(question: Question) {
-	if (question.solutionType !== SolutionType.AlgoVisualizer && question.solutionType !== SolutionType.UiDemo) return undefined;
+	if (
+		question.solutionType !== SolutionType.AlgoVisualizer &&
+		question.solutionType !== SolutionType.UiDemo &&
+		question.solutionType !== SolutionType.Writeup
+	)
+		return undefined;
 	if (question.status !== QuestionStatus.Done) return undefined;
 	const key = getRendererKey(question);
 	return key in SOLUTION_RENDERER_LOADERS ? SOLUTION_RENDERER_LOADERS[key as keyof typeof SOLUTION_RENDERER_LOADERS] : undefined;
 }
 
-/** True when question has a runnable solution (done + algo_visualizer or ui_demo). */
+/** True when question has a runnable solution (done + algo_visualizer, ui_demo, or writeup with renderer). */
 export function isRunnableQuestion(question: Question): boolean {
 	return getLoader(question) !== undefined;
 }

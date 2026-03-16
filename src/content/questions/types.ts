@@ -4,10 +4,10 @@ export enum Track {
 }
 
 export enum SolutionType {
-	UiDemo = "ui_demo",
-	AlgoVisualizer = "algo_visualizer",
-	CodeAndTests = "code_and_tests",
-	Writeup = "writeup",
+	UiDemo = "UI Demo",
+	AlgoVisualizer = "Algo Visualizer",
+	CodeAndTests = "Code and Tests",
+	Writeup = "Write Up",
 }
 
 export enum QuestionStatus {
