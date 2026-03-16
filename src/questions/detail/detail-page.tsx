@@ -41,7 +41,7 @@ function LazySolutionRenderer({ question }: { question: Question }) {
 }
 
 function SolutionFallback({ question }: { question: Question }) {
-	if (question.solutionType === SolutionType.AlgoVisualizer) {
+	if (question.solutionTypes.includes(SolutionType.AlgoVisualizer)) {
 		return (
 			<div className={FALLBACK_CLASS}>
 				<p>Interactive algorithm walkthrough is pending for this question.</p>
@@ -49,7 +49,7 @@ function SolutionFallback({ question }: { question: Question }) {
 		);
 	}
 
-	if (question.solutionType === SolutionType.Writeup) {
+	if (question.solutionTypes.includes(SolutionType.Writeup)) {
 		return (
 			<div className={`space-y-2 text-sm ${QUESTION_UI_CLASSES.bodyText}`}>
 				<p>{question.approach}</p>

@@ -9,13 +9,12 @@ const DEFAULT_QUESTION: Question = {
 	category: "JavaScript functions",
 	difficulty: Difficulty.Medium,
 	sourceUrl: "https://example.com",
-	solutionType: SolutionType.AlgoVisualizer,
+	solutionTypes: [SolutionType.AlgoVisualizer],
 	status: QuestionStatus.Done,
 	summary: "Delay function execution.",
 	cardSummary: "Delay function execution.",
 	approach: "Use a closure.",
 	complexity: "O(1)",
-	tags: ["timers", "closures"],
 };
 
 /** Creates a mock Question with optional overrides. */
@@ -35,13 +34,12 @@ export function createMockQuestions(overrides?: Partial<Question>[]): Question[]
 			questionNumber: 2,
 			path: "array-reduce",
 			title: "Array.prototype.reduce",
-			solutionType: SolutionType.CodeAndTests,
+			solutionTypes: [SolutionType.CodeAndTests],
 			status: QuestionStatus.Todo,
 			summary: "Implement reduce.",
 			cardSummary: "TODO: Add concise card summary.",
 			approach: "TODO",
 			complexity: "TODO",
-			tags: [],
 		}),
 	];
 	if (overrides) {

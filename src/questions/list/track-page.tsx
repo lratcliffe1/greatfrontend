@@ -54,7 +54,7 @@ export function TrackQuestionsPage({ track, questions }: { track: Track; questio
 				effectiveSearch.length === 0 ||
 				String(question.questionNumber).startsWith(effectiveSearch.trim()) ||
 				question.title.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
-				question.tags.some((tag) => tag.toLowerCase().includes(effectiveSearch.toLowerCase()));
+				question.solutionTypes.some((t) => t.toLowerCase().includes(effectiveSearch.toLowerCase()));
 			const matchesCategory = track === Track.Blind75 || effectiveCategory === "all" || question.category === effectiveCategory;
 			const matchesStatus = effectiveStatus === "all" || question.status === effectiveStatus;
 			const matchesDifficulty = effectiveDifficulty === "all" || question.difficulty === effectiveDifficulty;
@@ -174,12 +174,14 @@ export function TrackQuestionsPage({ track, questions }: { track: Track; questio
 						</div>
 						<MutedText className="text-xs wrap-break-word sm:text-sm">{question.cardSummary}</MutedText>
 						<div className="mt-auto pt-3 sm:pt-4">
-							<div className="mb-3 flex flex-wrap items-center gap-1.5 text-[10px] sm:mb-4 sm:gap-2 sm:text-xs">
-								<span className={QUESTION_UI_CLASSES.mutedText}>{question.category}</span>
-								<span className={QUESTION_UI_CLASSES.mutedText}>•</span>
-								<span className={QUESTION_UI_CLASSES.mutedText}>{question.solutionType}</span>
-								<span className={QUESTION_UI_CLASSES.mutedText}>•</span>
-								<StatusBadge status={question.status} />
+							<div className="mb-3 flex flex-col gap-1 text-[10px] sm:mb-4 sm:gap-1.5 sm:text-xs">
+								<div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+									<span className={`font-semibold ${QUESTION_UI_CLASSES.mutedText}`}>{question.category}</span>
+									<StatusBadge status={question.status} />
+								</div>
+								<div className={`text-[10px] sm:text-[11px] ${QUESTION_UI_CLASSES.mutedText}`}>
+									{question.solutionTypes.join(" • ")}
+								</div>
 							</div>
 							<div className="flex flex-wrap items-center gap-2 text-xs sm:gap-3 sm:text-sm">
 								{question.status === QuestionStatus.Done ? (

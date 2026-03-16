@@ -6,7 +6,7 @@ import { createMockQuestion } from "@/questions/mock-questions";
 const mockQuestion = createMockQuestion({
 	id: "gfe-other",
 	sourceUrl: "https://www.greatfrontend.com/interviews/debounce",
-	solutionType: SolutionType.CodeAndTests,
+	solutionTypes: [SolutionType.CodeAndTests],
 	summary: "Debouncing controls how often a function is allowed to execute over time.",
 	cardSummary:
 		"Implement a function to limit how many times a function can be executed by delaying the execution of the function until after a specified time after its last execution attempt",
@@ -55,7 +55,7 @@ describe("QuestionDetailPage", () => {
 			...mockQuestion,
 			id: "gfe-autocomplete",
 			path: "autocomplete",
-			solutionType: SolutionType.Writeup,
+			solutionTypes: [SolutionType.Writeup],
 		};
 
 		render(<QuestionDetailPage question={writeupQuestion} />);
@@ -67,7 +67,7 @@ describe("QuestionDetailPage", () => {
 		const codeQuestion: Question = {
 			...mockQuestion,
 			id: "gfe-other",
-			solutionType: SolutionType.CodeAndTests,
+			solutionTypes: [SolutionType.CodeAndTests],
 		};
 
 		render(<QuestionDetailPage question={codeQuestion} />);
@@ -82,7 +82,7 @@ describe("QuestionDetailPage", () => {
 			path: "find-duplicates-in-array",
 			track: Track.Blind75,
 			title: "Find Duplicates in Array",
-			solutionType: SolutionType.AlgoVisualizer,
+			solutionTypes: [SolutionType.AlgoVisualizer],
 		};
 
 		render(<QuestionDetailPage question={duplicateQuestion} />);

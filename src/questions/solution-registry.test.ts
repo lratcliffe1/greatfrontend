@@ -3,14 +3,18 @@ import { getSolutionRenderer, prefetchSolutionRenderer } from "@/questions/solut
 import { createMockQuestion } from "@/questions/mock-questions";
 
 describe("getSolutionRenderer", () => {
-	it("returns null for code_and_tests solution type", () => {
-		const question = createMockQuestion({ solutionType: SolutionType.CodeAndTests, status: QuestionStatus.Done });
+	it("returns null when done but no loader exists for path", () => {
+		const question = createMockQuestion({
+			solutionTypes: [SolutionType.CodeAndTests],
+			status: QuestionStatus.Done,
+			path: "array-prototype-reduce",
+		});
 		expect(getSolutionRenderer(question)).toBeNull();
 	});
 
 	it("returns null for writeup solution type when no loader exists", () => {
 		const question = createMockQuestion({
-			solutionType: SolutionType.Writeup,
+			solutionTypes: [SolutionType.Writeup],
 			status: QuestionStatus.Done,
 			path: "autocomplete",
 		});
@@ -18,7 +22,7 @@ describe("getSolutionRenderer", () => {
 	});
 
 	it("returns null when status is not done", () => {
-		const question = createMockQuestion({ solutionType: SolutionType.AlgoVisualizer, status: QuestionStatus.Todo });
+		const question = createMockQuestion({ solutionTypes: [SolutionType.AlgoVisualizer], status: QuestionStatus.Todo });
 		expect(getSolutionRenderer(question)).toBeNull();
 	});
 
@@ -26,7 +30,7 @@ describe("getSolutionRenderer", () => {
 		const question = createMockQuestion({
 			track: Track.Gfe75,
 			path: "non-existent-question",
-			solutionType: SolutionType.AlgoVisualizer,
+			solutionTypes: [SolutionType.AlgoVisualizer],
 			status: QuestionStatus.Done,
 		});
 		expect(getSolutionRenderer(question)).toBeNull();
@@ -36,7 +40,7 @@ describe("getSolutionRenderer", () => {
 		const question = createMockQuestion({
 			track: Track.Gfe75,
 			path: "debounce",
-			solutionType: SolutionType.AlgoVisualizer,
+			solutionTypes: [SolutionType.AlgoVisualizer],
 			status: QuestionStatus.Done,
 		});
 		const renderer = getSolutionRenderer(question);
@@ -50,14 +54,18 @@ describe("prefetchSolutionRenderer", () => {
 		const question = createMockQuestion({
 			track: Track.Gfe75,
 			path: "debounce",
-			solutionType: SolutionType.AlgoVisualizer,
+			solutionTypes: [SolutionType.AlgoVisualizer],
 			status: QuestionStatus.Done,
 		});
 		expect(() => prefetchSolutionRenderer(question)).not.toThrow();
 	});
 
-	it("does not throw for non-runnable question", () => {
-		const question = createMockQuestion({ solutionType: SolutionType.CodeAndTests, status: QuestionStatus.Done });
+	it("does not throw when no loader exists", () => {
+		const question = createMockQuestion({
+			solutionTypes: [SolutionType.CodeAndTests],
+			status: QuestionStatus.Done,
+			path: "array-prototype-reduce",
+		});
 		expect(() => prefetchSolutionRenderer(question)).not.toThrow();
 	});
 
@@ -65,7 +73,7 @@ describe("prefetchSolutionRenderer", () => {
 		const question = createMockQuestion({
 			track: Track.Gfe75,
 			path: "debounce",
-			solutionType: SolutionType.AlgoVisualizer,
+			solutionTypes: [SolutionType.AlgoVisualizer],
 			status: QuestionStatus.Todo,
 		});
 		expect(() => prefetchSolutionRenderer(question)).not.toThrow();

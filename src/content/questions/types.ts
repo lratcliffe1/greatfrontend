@@ -6,8 +6,13 @@ export enum Track {
 export enum SolutionType {
 	UiDemo = "UI Demo",
 	AlgoVisualizer = "Algo Visualizer",
+	TimelineVisualizer = "Timeline Visualizer",
 	CodeAndTests = "Code and Tests",
 	Writeup = "Write Up",
+	GraphQL = "GraphQL",
+	Redux = "Redux",
+	API = "API",
+	WebStorage = "Web Storage",
 }
 
 export enum QuestionStatus {
@@ -31,11 +36,10 @@ export type Question = {
 	category: string;
 	difficulty: Difficulty;
 	sourceUrl: string;
-	solutionType: SolutionType;
+	solutionTypes: SolutionType[];
 	status: QuestionStatus;
 	summary: string;
 	cardSummary: string;
 	approach: string;
 	complexity: string;
-	tags: string[];
 };

@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import type { ComponentType } from "react";
 
-import { QuestionStatus, SolutionType, type Question } from "@/content/questions";
+import { QuestionStatus, type Question } from "@/content/questions";
 import { QUESTION_UI_CLASSES } from "@/questions/ui/question-ui";
 import { SOLUTION_RENDERER_LOADERS } from "@/solutions/renderer-loaders";
 
@@ -14,18 +14,12 @@ function getRendererKey(question: Question): string {
 }
 
 function getLoader(question: Question) {
-	if (
-		question.solutionType !== SolutionType.AlgoVisualizer &&
-		question.solutionType !== SolutionType.UiDemo &&
-		question.solutionType !== SolutionType.Writeup
-	)
-		return undefined;
 	if (question.status !== QuestionStatus.Done) return undefined;
 	const key = getRendererKey(question);
 	return key in SOLUTION_RENDERER_LOADERS ? SOLUTION_RENDERER_LOADERS[key as keyof typeof SOLUTION_RENDERER_LOADERS] : undefined;
 }
 
-/** True when question has a runnable solution (done + algo_visualizer, ui_demo, or writeup with renderer). */
+/** True when question is done and has a loader registered for its track/path. */
 export function isRunnableQuestion(question: Question): boolean {
 	return getLoader(question) !== undefined;
 }
