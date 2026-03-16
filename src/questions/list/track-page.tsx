@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { startTransition, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { QuestionStatus, Track, type Question } from "@/content/questions";
 import { FilterSelect } from "@/components/ui/filter-select";
@@ -18,6 +18,9 @@ import { useFilterSync } from "@/questions/hooks/use-url-filters";
 import { DIFFICULTY_OPTIONS, STATUS_OPTIONS } from "@/lib/constants/filters";
 import { SEARCH_DEBOUNCE_MS } from "@/lib/constants/ui";
 
+const INITIAL_VISIBLE = 10;
+const LOAD_MORE_BATCH = 10;
+
 export function TrackQuestionsPage({ track, questions }: { track: Track; questions: Question[] }) {
 	const router = useRouter();
 	const dispatch = useAppDispatch();
@@ -25,11 +28,17 @@ export function TrackQuestionsPage({ track, questions }: { track: Track; questio
 
 	// Local state for search input so typing feels instant (good INP); debounce Redux updates.
 	const [searchInput, setSearchInput] = useState(effectiveSearch);
+	const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
 	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const sentinelRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		setSearchInput(effectiveSearch);
 	}, [effectiveSearch]);
+
+	useEffect(() => {
+		setVisibleCount(INITIAL_VISIBLE);
+	}, [effectiveSearch, effectiveCategory, effectiveStatus, effectiveDifficulty, track]);
 
 	useEffect(() => {
 		return () => {
@@ -62,6 +71,23 @@ export function TrackQuestionsPage({ track, questions }: { track: Track; questio
 			return matchesSearch && matchesCategory && matchesStatus && matchesDifficulty;
 		});
 	}, [effectiveCategory, effectiveDifficulty, effectiveSearch, effectiveStatus, questions, track]);
+
+	const loadMore = useCallback(() => {
+		setVisibleCount((prev) => Math.min(prev + LOAD_MORE_BATCH, filtered.length));
+	}, [filtered.length]);
+
+	useEffect(() => {
+		const node = sentinelRef.current;
+		if (!node || visibleCount >= filtered.length) return;
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries.some((e) => e.isIntersecting)) loadMore();
+			},
+			{ rootMargin: "100% 0px" },
+		);
+		observer.observe(node);
+		return () => observer.disconnect();
+	}, [visibleCount, filtered.length, loadMore]);
 
 	const completedCount = filtered.filter((question) => question.status === QuestionStatus.Done).length;
 
@@ -151,7 +177,7 @@ export function TrackQuestionsPage({ track, questions }: { track: Track; questio
 			</div>
 
 			<div className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2" data-testid="question-grid">
-				{filtered.map((question) => (
+				{filtered.slice(0, visibleCount).map((question) => (
 					<ElevatedCard
 						key={question.id}
 						data-testid={`question-card-${question.path}`}
@@ -210,6 +236,12 @@ export function TrackQuestionsPage({ track, questions }: { track: Track; questio
 					</ElevatedCard>
 				))}
 			</div>
+			<div ref={sentinelRef} className="h-8" aria-hidden="true" />
+			{visibleCount < filtered.length && (
+				<p className="mt-3 text-xs text-muted" aria-live="polite">
+					Showing {visibleCount} of {filtered.length} — scroll for more
+				</p>
+			)}
 		</section>
 	);
 }
