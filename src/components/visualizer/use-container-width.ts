@@ -13,8 +13,15 @@ export function useContainerWidth(): [React.RefObject<HTMLDivElement | null>, nu
 			if (entry) setWidth(entry.contentRect.width);
 		});
 		ro.observe(el);
-		setWidth(el.getBoundingClientRect().width);
-		return () => ro.disconnect();
+		// Defer layout read to avoid forced reflow (reading getBoundingClientRect
+		// synchronously after DOM updates triggers layout recalculation)
+		const raf = requestAnimationFrame(() => {
+			if (el.isConnected) setWidth(el.getBoundingClientRect().width);
+		});
+		return () => {
+			cancelAnimationFrame(raf);
+			ro.disconnect();
+		};
 	}, []);
 
 	return [ref, width];
