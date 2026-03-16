@@ -2,6 +2,7 @@
 
 import { startTransition, useMemo, useState } from "react";
 
+import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { ArrayVisualization } from "@/components/visualizer/array-visualization";
 import { AppButton, EditableFieldPrompt } from "@/components/ui/tailwind-primitives";
 import {
@@ -49,7 +50,11 @@ export function MostCommonElementsVisualizer() {
 		};
 	});
 
-	const parsedNumbers = useMemo(() => parseCommaSeparatedIntegers(numbersInput, MOST_COMMON_ELEMENTS_CONSTRAINTS), [numbersInput]);
+	const debouncedNumbersInput = useDebouncedValue(numbersInput, 300);
+	const parsedNumbers = useMemo(
+		() => parseCommaSeparatedIntegers(debouncedNumbersInput, MOST_COMMON_ELEMENTS_CONSTRAINTS),
+		[debouncedNumbersInput],
+	);
 	const parsedK = useMemo(() => parseK(kInput), [kInput]);
 
 	const kError = useMemo(() => {
@@ -70,11 +75,13 @@ export function MostCommonElementsVisualizer() {
 	const canApply = !parsedNumbers.error && !kError && parsedNumbers.data !== null && parsedK.data !== null;
 
 	const handleApply = () => {
-		if (!canApply || parsedNumbers.data === null || parsedK.data === null) return;
-		const numbers = parsedNumbers.data;
-		const k = parsedK.data;
+		const numsResult = parseCommaSeparatedIntegers(numbersInput, MOST_COMMON_ELEMENTS_CONSTRAINTS);
+		const kResult = parseK(kInput);
+		if (numsResult.error || numsResult.data === null || kResult.error || kResult.data === null) return;
+		const uniqueCount = new Set(numsResult.data).size;
+		if (kResult.data > uniqueCount) return;
 		startTransition(() => {
-			setApplied({ numbers, k });
+			setApplied({ numbers: numsResult.data, k: kResult.data });
 			setStepIndex(0);
 			flash();
 		});

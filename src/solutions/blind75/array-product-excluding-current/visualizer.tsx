@@ -2,6 +2,7 @@
 
 import { startTransition, useMemo, useState } from "react";
 
+import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { StepVisualizerInput } from "@/components/visualizer/step-visualizer-input";
 import {
 	StepVisualizerLayout,
@@ -45,7 +46,8 @@ export function ArrayProductExcludingCurrentVisualizer() {
 		return result.data ?? [];
 	});
 
-	const parsedInput = useMemo(() => parseCommaSeparatedIntegers(input, PRODUCT_EXCLUDING_CURRENT_CONSTRAINTS), [input]);
+	const debouncedInput = useDebouncedValue(input, 300);
+	const parsedInput = useMemo(() => parseCommaSeparatedIntegers(debouncedInput, PRODUCT_EXCLUDING_CURRENT_CONSTRAINTS), [debouncedInput]);
 	const steps = useMemo(() => getProductExcludingCurrentSteps(appliedNumbers), [appliedNumbers]);
 	const { step, onPrev, onNext, canPrev, canNext } = useStepNavigation(steps, stepIndex, setStepIndex);
 	const activeLine = step?.line ?? null;
@@ -61,9 +63,10 @@ export function ArrayProductExcludingCurrentVisualizer() {
 				onChange={setInput}
 				error={parsedInput.error}
 				onApply={() => {
-					if (parsedInput.error || parsedInput.data === null) return;
+					const result = parseCommaSeparatedIntegers(input, PRODUCT_EXCLUDING_CURRENT_CONSTRAINTS);
+					if (result.error || result.data === null) return;
 					startTransition(() => {
-						setAppliedNumbers(parsedInput.data);
+						setAppliedNumbers(result.data);
 						setStepIndex(0);
 						flash();
 					});

@@ -2,6 +2,7 @@
 
 import { startTransition, useMemo, useState } from "react";
 
+import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { StepVisualizerInput } from "@/components/visualizer/step-visualizer-input";
 import {
 	StepVisualizerLayout,
@@ -42,7 +43,11 @@ export function FindMissingNumberVisualizer() {
 		const result = parseCommaSeparatedIntegers(INITIAL_INPUT, MISSING_NUMBER_CONSTRAINTS, getMissingNumberInputError);
 		return result.data ?? [];
 	});
-	const parsedInput = useMemo(() => parseCommaSeparatedIntegers(input, MISSING_NUMBER_CONSTRAINTS, getMissingNumberInputError), [input]);
+	const debouncedInput = useDebouncedValue(input, 300);
+	const parsedInput = useMemo(
+		() => parseCommaSeparatedIntegers(debouncedInput, MISSING_NUMBER_CONSTRAINTS, getMissingNumberInputError),
+		[debouncedInput],
+	);
 	const steps = useMemo(() => getMissingNumberSteps(appliedNumbers), [appliedNumbers]);
 	const { step, onPrev, onNext, canPrev, canNext } = useStepNavigation(steps, stepIndex, setStepIndex);
 	const activeLine = step?.line ?? null;
@@ -58,9 +63,10 @@ export function FindMissingNumberVisualizer() {
 				onChange={setInput}
 				error={parsedInput.error}
 				onApply={() => {
-					if (parsedInput.error || parsedInput.data === null) return;
+					const result = parseCommaSeparatedIntegers(input, MISSING_NUMBER_CONSTRAINTS, getMissingNumberInputError);
+					if (result.error || result.data === null) return;
 					startTransition(() => {
-						setAppliedNumbers(parsedInput.data);
+						setAppliedNumbers(result.data);
 						setStepIndex(0);
 						flash();
 					});

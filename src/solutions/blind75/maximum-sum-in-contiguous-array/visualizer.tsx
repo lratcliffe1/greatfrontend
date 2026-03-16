@@ -2,6 +2,7 @@
 
 import { startTransition, useMemo, useState } from "react";
 
+import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { StepVisualizerInput } from "@/components/visualizer/step-visualizer-input";
 import {
 	StepVisualizerLayout,
@@ -40,7 +41,8 @@ export function MaximumSumInContiguousArrayVisualizer() {
 		return result.data ?? [];
 	});
 
-	const parsedInput = useMemo(() => parseCommaSeparatedIntegers(input, MAX_SUM_ARRAY_CONSTRAINTS), [input]);
+	const debouncedInput = useDebouncedValue(input, 300);
+	const parsedInput = useMemo(() => parseCommaSeparatedIntegers(debouncedInput, MAX_SUM_ARRAY_CONSTRAINTS), [debouncedInput]);
 	const steps = useMemo(() => getMaxSumSteps(appliedNumbers), [appliedNumbers]);
 	const { step, onPrev, onNext, canPrev, canNext } = useStepNavigation(steps, stepIndex, setStepIndex);
 	const activeLine = step?.line ?? null;
@@ -56,9 +58,10 @@ export function MaximumSumInContiguousArrayVisualizer() {
 				onChange={setInput}
 				error={parsedInput.error}
 				onApply={() => {
-					if (parsedInput.error || parsedInput.data === null) return;
+					const result = parseCommaSeparatedIntegers(input, MAX_SUM_ARRAY_CONSTRAINTS);
+					if (result.error || result.data === null) return;
 					startTransition(() => {
-						setAppliedNumbers(parsedInput.data);
+						setAppliedNumbers(result.data);
 						setStepIndex(0);
 						flash();
 					});
