@@ -3,7 +3,11 @@
 import { startTransition, useMemo, useState } from "react";
 
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
-import { AppButton } from "@/components/ui/tailwind-primitives";
+import {
+	StepVisualizerApplyButton,
+	StepVisualizerInputField,
+	StepVisualizerInputSection,
+} from "@/components/visualizer/step-visualizer-input-section";
 import {
 	StepVisualizerLayout,
 	TraceEmptyState,
@@ -89,44 +93,29 @@ export function ArrayPrototypeReduceVisualizer() {
 
 	return (
 		<StepVisualizerPage>
-			<div className="space-y-3">
-				<div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-					<div className="flex-1 space-y-1">
-						<label htmlFor="reduce-array-input" className="block text-sm font-medium text-foreground">
-							Array
-						</label>
-						<input
-							id="reduce-array-input"
-							className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground sm:flex-1"
-							placeholder="1, 2, 3"
-							value={arrayInput}
-							onChange={(e) => setArrayInput(e.target.value)}
-						/>
-						{arrayError && <p className="text-sm text-amber-600 dark:text-amber-400">{arrayError}</p>}
-					</div>
-					<div className="w-28 space-y-1">
-						<label htmlFor="reduce-initial-input" className="block text-sm font-medium text-foreground">
-							Initial
-						</label>
-						<input
-							id="reduce-initial-input"
-							type="text"
-							placeholder="0 (or empty)"
-							value={initialValueInput}
-							onChange={(e) => setInitialValueInput(e.target.value)}
-							className="w-full rounded-md border border-card-border bg-background px-2 py-2 text-foreground"
-						/>
-						{initialError && <p className="text-sm text-amber-600 dark:text-amber-400">{initialError}</p>}
-					</div>
-					<AppButton type="button" onClick={handleApply} disabled={!canApply}>
-						Apply
-					</AppButton>
-				</div>
-				<p className="text-xs text-slate-400">Reducer: (prev, curr) =&gt; prev + curr. Leave initial empty to simulate no initial value.</p>
-			</div>
+			<StepVisualizerInputSection error={arrayError ?? initialError}>
+				<StepVisualizerInputField
+					id="reduce-array-input"
+					label="Array input"
+					placeholder="Try: 1, 2, 3, 4"
+					value={arrayInput}
+					onChange={(e) => setArrayInput(e.target.value)}
+					invalid={Boolean(arrayError)}
+				/>
+				<StepVisualizerInputField
+					id="reduce-initial-input"
+					label="Initial"
+					placeholder="0 (or empty)"
+					value={initialValueInput}
+					onChange={(e) => setInitialValueInput(e.target.value)}
+					invalid={Boolean(initialError)}
+					size="secondary"
+				/>
+				<StepVisualizerApplyButton onClick={handleApply} disabled={!canApply} />
+			</StepVisualizerInputSection>
 
 			<StepVisualizerLayout
-				codeTitle="Calling arr.myReduce"
+				codeTitle="Array.prototype.reduce implementation"
 				codeLines={CODE_LINES}
 				activeLine={activeLine}
 				tracePanelClassName={tracePanelClassName}

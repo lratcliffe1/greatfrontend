@@ -52,7 +52,6 @@ export function EndOfArrayReachableVisualizer() {
 		<StepVisualizerPage>
 			<StepVisualizerInput
 				label="Numbers input"
-				hint="Comma-separated integers. Each value = max jump length from that index. Constraints: 1–10,000 elements, each in [0, 100,000]."
 				inputId="end-of-array-input"
 				placeholder="Try: 4, 1, 0, 0, 2, 0, 3 or 1, 0, 0, 0"
 				value={input}
@@ -85,12 +84,7 @@ export function EndOfArrayReachableVisualizer() {
 				{step ? (
 					<TracePanelContent>
 						<div className="mb-2">
-							<ArrayVisualization
-								values={appliedNumbers}
-								activeIndex={step.index}
-								rangeEnd={step.maxReach}
-								targetIndex={appliedNumbers.length - 1}
-							/>
+							<ArrayVisualization values={appliedNumbers} activeIndex={step.index} rangeEnd={step.maxReach} targetIndex={appliedNumbers.length - 1} />
 						</div>
 						<TraceLine>{step.action}</TraceLine>
 						<TraceLine>maxReach = {step.maxReach}</TraceLine>

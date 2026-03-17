@@ -16,7 +16,10 @@ import { useTraceFlash } from "@/components/visualizer/use-trace-flash";
 import { useStepNavigation } from "@/components/visualizer/use-step-navigation";
 import { ArrayVisualization } from "@/components/visualizer/array-visualization";
 import { parseCommaSeparatedIntegers } from "@/lib/utils/parse-visualizer-user-inputs";
-import { PRODUCT_EXCLUDING_CURRENT_CONSTRAINTS, getProductExcludingCurrentSteps } from "@/solutions/blind75/07-array-product-excluding-current/solution";
+import {
+	PRODUCT_EXCLUDING_CURRENT_CONSTRAINTS,
+	getProductExcludingCurrentSteps,
+} from "@/solutions/blind75/07-array-product-excluding-current/solution";
 
 const CODE_LINES: CodeLine[] = [
 	{ line: 1, code: "export function arrayProductExcludingCurrent(numbers: number[]) {" },
@@ -56,7 +59,6 @@ export function ArrayProductExcludingCurrentVisualizer() {
 		<StepVisualizerPage>
 			<StepVisualizerInput
 				label="Numbers input"
-				hint="Use comma-separated integers. Constraints: 2–1000 elements, each in [-10, 10]."
 				inputId="product-excluding-current-input"
 				placeholder="Try: 1, 2, 3 or 2, 0, 3"
 				value={input}

@@ -52,7 +52,6 @@ export function MaximumProductInContiguousArrayVisualizer() {
 		<StepVisualizerPage>
 			<StepVisualizerInput
 				label="Numbers input"
-				hint="Comma-separated integers. Constraints: 1–1000 elements, each in [-10, 10]."
 				inputId="max-product-array-input"
 				placeholder="Try: 1, 2, -3, 5, 1 or 1, 2, 0, -1, 8, -4"
 				value={input}

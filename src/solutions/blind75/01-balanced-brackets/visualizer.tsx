@@ -57,7 +57,6 @@ export function BalancedBracketsVisualizer() {
 		<StepVisualizerPage>
 			<StepVisualizerInput
 				label="Bracket input"
-				hint="Use bracket characters. Only valid inputs within the problem constraints can be applied."
 				inputId="bracket-input"
 				placeholder="Try: ([]){}, ([)], or ((("
 				value={input}

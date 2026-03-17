@@ -4,7 +4,11 @@ import { startTransition, useMemo, useState } from "react";
 
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { ArrayVisualization } from "@/components/visualizer/array-visualization";
-import { AppButton, EditableFieldPrompt } from "@/components/ui/tailwind-primitives";
+import {
+	StepVisualizerApplyButton,
+	StepVisualizerInputField,
+	StepVisualizerInputSection,
+} from "@/components/visualizer/step-visualizer-input-section";
 import {
 	StepVisualizerLayout,
 	TraceEmptyState,
@@ -33,9 +37,6 @@ const CODE_LINES: CodeLine[] = [
 const INITIAL_NUMBERS = "4, 4, 4, 6, 6, 5, 5, 5";
 const INITIAL_K = "2";
 
-const INPUT_CLASSES = "rounded-md border border-card-border bg-background px-3 py-2 text-foreground";
-const ERROR_CLASSES = "text-sm text-amber-600 dark:text-amber-400";
-
 export function MostCommonElementsVisualizer() {
 	const [numbersInput, setNumbersInput] = useState(INITIAL_NUMBERS);
 	const [kInput, setKInput] = useState(INITIAL_K);
@@ -51,10 +52,7 @@ export function MostCommonElementsVisualizer() {
 	});
 
 	const debouncedNumbersInput = useDebouncedValue(numbersInput, 300);
-	const parsedNumbers = useMemo(
-		() => parseCommaSeparatedIntegers(debouncedNumbersInput, MOST_COMMON_ELEMENTS_CONSTRAINTS),
-		[debouncedNumbersInput],
-	);
+	const parsedNumbers = useMemo(() => parseCommaSeparatedIntegers(debouncedNumbersInput, MOST_COMMON_ELEMENTS_CONSTRAINTS), [debouncedNumbersInput]);
 	const parsedK = useMemo(() => parseSingleInteger(kInput, PARSE_K_OPTIONS), [kInput]);
 
 	const kError = useMemo(() => {
@@ -92,47 +90,26 @@ export function MostCommonElementsVisualizer() {
 
 	return (
 		<StepVisualizerPage>
-			<div className="space-y-2">
-				<EditableFieldPrompt
-					htmlFor="most-common-numbers-input"
+			<StepVisualizerInputSection error={parsedNumbers.error ?? kError}>
+				<StepVisualizerInputField
+					id="most-common-numbers-input"
 					label="Numbers input"
-					hint="Comma-separated integers. Constraints: 1–1000 elements, each in [-10,000, 10,000]."
+					placeholder="Try: 4, 4, 4, 6, 6, 5, 5, 5"
+					value={numbersInput}
+					onChange={(e) => setNumbersInput(e.target.value)}
+					invalid={Boolean(parsedNumbers.error)}
 				/>
-				<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-					<input
-						id="most-common-numbers-input"
-						className={`${INPUT_CLASSES} w-full min-w-0 sm:flex-1`}
-						aria-invalid={Boolean(parsedNumbers.error)}
-						value={numbersInput}
-						placeholder="Try: 4, 4, 4, 6, 6, 5, 5, 5"
-						onChange={(e) => setNumbersInput(e.target.value)}
-					/>
-					<div className="flex shrink-0 items-center gap-2">
-						<label htmlFor="most-common-k-input" className="text-sm font-medium text-foreground">
-							k:
-						</label>
-						<input
-							id="most-common-k-input"
-							type="text"
-							className={`${INPUT_CLASSES} w-14`}
-							value={kInput}
-							onChange={(e) => setKInput(e.target.value)}
-							placeholder="2"
-							aria-invalid={Boolean(kError)}
-						/>
-					</div>
-					<AppButton type="button" onClick={handleApply} disabled={!canApply} className="shrink-0">
-						Apply input
-					</AppButton>
-				</div>
-				<div className="min-h-10">
-					{(parsedNumbers.error || kError) && (
-						<p className={ERROR_CLASSES} role="alert">
-							{parsedNumbers.error ?? kError}
-						</p>
-					)}
-				</div>
-			</div>
+				<StepVisualizerInputField
+					id="most-common-k-input"
+					label="K"
+					placeholder="2"
+					value={kInput}
+					onChange={(e) => setKInput(e.target.value)}
+					invalid={Boolean(kError)}
+					size="secondary"
+				/>
+				<StepVisualizerApplyButton onClick={handleApply} disabled={!canApply} />
+			</StepVisualizerInputSection>
 
 			<StepVisualizerLayout
 				codeTitle="Most Common Elements implementation"

@@ -16,7 +16,11 @@ import { useTraceFlash } from "@/components/visualizer/use-trace-flash";
 import { useStepNavigation } from "@/components/visualizer/use-step-navigation";
 import { ArrayVisualization } from "@/components/visualizer/array-visualization";
 import { parseCommaSeparatedIntegers } from "@/lib/utils/parse-visualizer-user-inputs";
-import { DUPLICATE_ARRAY_CONSTRAINTS, getDuplicateScanSteps, type DuplicateScanOutcome } from "@/solutions/blind75/02-find-duplicates-in-array/solution";
+import {
+	DUPLICATE_ARRAY_CONSTRAINTS,
+	getDuplicateScanSteps,
+	type DuplicateScanOutcome,
+} from "@/solutions/blind75/02-find-duplicates-in-array/solution";
 
 const CODE_LINES: CodeLine[] = [
 	{ line: 1, code: "export function hasDuplicate(numbers: number[]) {" },
@@ -74,7 +78,6 @@ export function FindDuplicatesInArrayVisualizer() {
 		<StepVisualizerPage>
 			<StepVisualizerInput
 				label="Numbers input"
-				hint="Use comma-separated integers. Only valid inputs within the problem constraints can be applied."
 				inputId="duplicate-array-input"
 				placeholder="Try: 5, 7, 1, 3 or 10, 7, 0, 0, 9"
 				value={input}

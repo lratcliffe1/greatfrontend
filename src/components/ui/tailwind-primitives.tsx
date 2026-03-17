@@ -138,28 +138,17 @@ export function MutedText({ children, className }: { children: ReactNode; classN
 	return <p className={withClass(PRIMITIVE_CLASSES.mutedText, className)}>{children}</p>;
 }
 
-export function EditableFieldPrompt({
-	htmlFor,
-	label,
-	hint,
-	badgeLabel = "Editable",
-}: {
-	htmlFor: string;
-	label: string;
-	hint: string;
-	badgeLabel?: string;
-}) {
+export function EditableFieldPrompt({ htmlFor, label, badgeLabel = "Editable" }: { htmlFor: string; label: string; badgeLabel?: string }) {
 	return (
-		<div className="space-y-1">
-			<div className="flex flex-wrap items-center gap-2">
-				<label className="text-sm font-medium text-foreground" htmlFor={htmlFor}>
-					{label}
-				</label>
+		<div className="flex flex-wrap items-center gap-2">
+			<label className="text-sm font-medium text-foreground" htmlFor={htmlFor}>
+				{label}
+			</label>
+			{badgeLabel && (
 				<span className="rounded-full border border-teal-400/60 bg-teal-500/10 px-2 py-0.5 text-xs font-semibold text-teal-700 dark:text-teal-300">
 					{badgeLabel}
 				</span>
-			</div>
-			<p className="text-xs text-muted">{hint}</p>
+			)}
 		</div>
 	);
 }

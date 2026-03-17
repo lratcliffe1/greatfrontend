@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 
 import { AppButton, EditableFieldPrompt } from "@/components/ui/tailwind-primitives";
+import { INPUT_CLASSES } from "@/components/visualizer/visualizer-input-constants";
 import {
 	StepVisualizerLayout,
 	TraceEmptyState,
@@ -105,8 +106,8 @@ export function ThrottleVisualizer() {
 	return (
 		<StepVisualizerPage>
 			<div className="space-y-2">
-				<EditableFieldPrompt htmlFor="wait-ms" label="Wait (ms)" hint="Change the wait to see how throttle timing affects execution." />
-				<div className="flex flex-wrap items-center gap-3">
+				<EditableFieldPrompt htmlFor="wait-ms" label="Wait (ms)" />
+				<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
 					<input
 						id="wait-ms"
 						type="number"
@@ -114,17 +115,19 @@ export function ThrottleVisualizer() {
 						step={100}
 						value={waitMs}
 						onChange={(event) => setWaitMs(Number(event.target.value) || 100)}
-						className="w-28 rounded-md border border-card-border bg-background px-2 py-1 text-foreground"
+						className={`${INPUT_CLASSES} w-28`}
 					/>
-					<AppButton type="button" onClick={triggerThrottledCall}>
-						Trigger throttled handler
-					</AppButton>
-					<AppButton type="button" onClick={runThrottleScenario}>
-						Run t=0, t=50, t=101 scenario
-					</AppButton>
-					<AppButton type="button" onClick={reset} disabled={traceLogs.length === 0}>
-						Reset
-					</AppButton>
+					<div className="flex shrink-0 flex-wrap gap-2">
+						<AppButton type="button" onClick={triggerThrottledCall}>
+							Trigger throttled handler
+						</AppButton>
+						<AppButton type="button" onClick={runThrottleScenario}>
+							Run t=0, t=50, t=101 scenario
+						</AppButton>
+						<AppButton type="button" onClick={reset} disabled={traceLogs.length === 0}>
+							Reset
+						</AppButton>
+					</div>
 				</div>
 			</div>
 

@@ -51,7 +51,6 @@ export function MaximumSumInContiguousArrayVisualizer() {
 		<StepVisualizerPage>
 			<StepVisualizerInput
 				label="Numbers input"
-				hint="Comma-separated integers. Constraints: 1–10,000 elements, each in [-10,000, 10,000]."
 				inputId="max-sum-array-input"
 				placeholder="Try: -1, 5, -3, 9, -11 or 1, 2, 3, 4"
 				value={input}

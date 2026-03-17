@@ -4,7 +4,6 @@ import { startTransition, useMemo, useState } from "react";
 
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { ArrayVisualization } from "@/components/visualizer/array-visualization";
-import { AppButton, EditableFieldPrompt } from "@/components/ui/tailwind-primitives";
 import {
 	StepVisualizerLayout,
 	TraceEmptyState,
@@ -15,6 +14,11 @@ import {
 } from "@/components/visualizer/step-visualizer-layout";
 import { useTraceFlash } from "@/components/visualizer/use-trace-flash";
 import { useStepNavigation } from "@/components/visualizer/use-step-navigation";
+import {
+	StepVisualizerApplyButton,
+	StepVisualizerInputField,
+	StepVisualizerInputSection,
+} from "@/components/visualizer/step-visualizer-input-section";
 import { parseCommaSeparatedIntegers, parseSingleInteger } from "@/lib/utils/parse-visualizer-user-inputs";
 import {
 	ROTATED_ARRAY_CONSTRAINTS,
@@ -42,9 +46,6 @@ const CODE_LINES: CodeLine[] = [
 
 const INITIAL_NUMBERS = "4, 7, 10, 11, 12, 2, 3";
 const INITIAL_TARGET = "12";
-
-const INPUT_CLASSES = "rounded-md border border-card-border bg-background px-3 py-2 text-foreground";
-const ERROR_CLASSES = "text-sm text-amber-600 dark:text-amber-400";
 
 function getPhaseVariant(phase: RotatedSearchStepPhase): "default" | "emphasized" | "warning" {
 	switch (phase) {
@@ -96,47 +97,26 @@ export function FindElementInRotatedArrayVisualizer() {
 
 	return (
 		<StepVisualizerPage>
-			<div className="space-y-2">
-				<EditableFieldPrompt
-					htmlFor="rotated-array-numbers-input"
+			<StepVisualizerInputSection error={parsedNumbers.error ?? parsedTarget.error}>
+				<StepVisualizerInputField
+					id="rotated-array-numbers-input"
 					label="Numbers input"
-					hint="Comma-separated integers (sorted, rotated, unique). Constraints: 1–1000 elements, each in [-10,000, 10,000]."
+					placeholder="Try: 2, 3, 4, 0, 1 or 0, 1, 2, 3, 4"
+					value={numbersInput}
+					onChange={(e) => setNumbersInput(e.target.value)}
+					invalid={Boolean(parsedNumbers.error)}
 				/>
-				<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-					<input
-						id="rotated-array-numbers-input"
-						className={`${INPUT_CLASSES} w-full min-w-0 sm:flex-1`}
-						aria-invalid={Boolean(parsedNumbers.error)}
-						value={numbersInput}
-						placeholder="Try: 2, 3, 4, 0, 1 or 0, 1, 2, 3, 4"
-						onChange={(e) => setNumbersInput(e.target.value)}
-					/>
-					<div className="flex shrink-0 items-center gap-2">
-						<label htmlFor="rotated-array-target-input" className="text-sm font-medium text-foreground">
-							target:
-						</label>
-						<input
-							id="rotated-array-target-input"
-							type="text"
-							className={`${INPUT_CLASSES} w-16`}
-							value={targetInput}
-							onChange={(e) => setTargetInput(e.target.value)}
-							placeholder="0"
-							aria-invalid={Boolean(parsedTarget.error)}
-						/>
-					</div>
-					<AppButton type="button" onClick={handleApply} disabled={!canApply} className="shrink-0">
-						Apply input
-					</AppButton>
-				</div>
-				<div className="min-h-10">
-					{(parsedNumbers.error || parsedTarget.error) && (
-						<p className={ERROR_CLASSES} role="alert">
-							{parsedNumbers.error ?? parsedTarget.error}
-						</p>
-					)}
-				</div>
-			</div>
+				<StepVisualizerInputField
+					id="rotated-array-target-input"
+					label="Target"
+					placeholder="0"
+					value={targetInput}
+					onChange={(e) => setTargetInput(e.target.value)}
+					invalid={Boolean(parsedTarget.error)}
+					size="secondary"
+				/>
+				<StepVisualizerApplyButton onClick={handleApply} disabled={!canApply} />
+			</StepVisualizerInputSection>
 
 			<StepVisualizerLayout
 				codeTitle="Find Element in Rotated Array implementation"

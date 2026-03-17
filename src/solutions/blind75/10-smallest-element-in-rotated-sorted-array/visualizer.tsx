@@ -65,7 +65,6 @@ export function SmallestInRotatedArrayVisualizer() {
 		<StepVisualizerPage>
 			<StepVisualizerInput
 				label="Numbers input"
-				hint="Comma-separated integers (sorted, rotated, unique). Constraints: 1–1000 elements, each in [-10,000, 10,000]."
 				inputId="smallest-rotated-input"
 				placeholder="Try: 3, 4, 1, 2 or 6, 7, 8, -5, -4, 2"
 				value={input}

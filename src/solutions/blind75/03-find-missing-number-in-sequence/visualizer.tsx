@@ -56,7 +56,6 @@ export function FindMissingNumberVisualizer() {
 		<StepVisualizerPage>
 			<StepVisualizerInput
 				label="Numbers input"
-				hint="Comma-separated integers in [0, n]. Must have n distinct values with exactly one missing from [0..n]."
 				inputId="missing-number-array-input"
 				placeholder="Try: 1, 3, 0 or 3, 0, 4, 2, 1"
 				value={input}

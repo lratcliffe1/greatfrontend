@@ -3,7 +3,11 @@
 import { startTransition, useMemo, useState } from "react";
 
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
-import { AppButton } from "@/components/ui/tailwind-primitives";
+import {
+	StepVisualizerApplyButton,
+	StepVisualizerInputField,
+	StepVisualizerInputSection,
+} from "@/components/visualizer/step-visualizer-input-section";
 import {
 	StepVisualizerLayout,
 	TraceEmptyState,
@@ -93,45 +97,29 @@ export function FunctionPrototypeCallVisualizer() {
 
 	return (
 		<StepVisualizerPage>
-			<div className="space-y-3">
-				<div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-end">
-					<div className="flex-1 min-w-0 space-y-1 sm:min-w-24">
-						<label htmlFor="call-age-input" className="block text-sm font-medium text-foreground">
-							age
-						</label>
-						<input
-							id="call-age-input"
-							type="text"
-							className="w-full rounded-md border border-card-border bg-background px-3 py-2 text-foreground"
-							placeholder="21"
-							value={ageInput}
-							onChange={(e) => setAgeInput(e.target.value)}
-						/>
-						{ageError && <p className="text-sm text-amber-600 dark:text-amber-400">{ageError}</p>}
-					</div>
-					<div className="flex-1 min-w-0 space-y-1 sm:min-w-24">
-						<label htmlFor="call-multiplier-input" className="block text-sm font-medium text-foreground">
-							multiplier
-						</label>
-						<input
-							id="call-multiplier-input"
-							type="text"
-							placeholder="empty = 1"
-							value={multiplierInput}
-							onChange={(e) => setMultiplierInput(e.target.value)}
-							className="w-full rounded-md border border-card-border bg-background px-2 py-2 text-foreground"
-						/>
-						{multiplierError && <p className="text-sm text-amber-600 dark:text-amber-400">{multiplierError}</p>}
-					</div>
-					<AppButton type="button" onClick={handleApply} disabled={!canApply}>
-						Apply
-					</AppButton>
-				</div>
-				<p className="text-xs text-slate-400">multiplyAgeCall(age, multiplier). Leave multiplier empty for default 1.</p>
-			</div>
+			<StepVisualizerInputSection inputId="call-age-input" error={ageError ?? multiplierError} alignRow="end" sectionLabelBadge={false}>
+				<StepVisualizerInputField
+					id="call-age-input"
+					label="Age"
+					placeholder="21"
+					value={ageInput}
+					onChange={(e) => setAgeInput(e.target.value)}
+					invalid={Boolean(ageError)}
+				/>
+				<StepVisualizerInputField
+					id="call-multiplier-input"
+					label="Multiplier"
+					placeholder="empty = 1"
+					value={multiplierInput}
+					onChange={(e) => setMultiplierInput(e.target.value)}
+					invalid={Boolean(multiplierError)}
+					size="secondary"
+				/>
+				<StepVisualizerApplyButton onClick={handleApply} disabled={!canApply} />
+			</StepVisualizerInputSection>
 
 			<StepVisualizerLayout
-				codeTitle="Calling multiplyAge.myCall"
+				codeTitle="Function.prototype.call implementation"
 				codeLines={CODE_LINES}
 				activeLine={activeLine}
 				tracePanelClassName={tracePanelClassName}

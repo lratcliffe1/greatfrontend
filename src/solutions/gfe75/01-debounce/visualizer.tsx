@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 
 import { AppButton, EditableFieldPrompt } from "@/components/ui/tailwind-primitives";
+import { INPUT_CLASSES } from "@/components/visualizer/visualizer-input-constants";
 import {
 	StepVisualizerLayout,
 	TraceEmptyState,
@@ -103,8 +104,8 @@ export function DebounceVisualizer() {
 	return (
 		<StepVisualizerPage>
 			<div className="space-y-2">
-				<EditableFieldPrompt htmlFor="delay-ms" label="Delay (ms)" hint="Change the delay to see how debounce timing affects execution." />
-				<div className="flex flex-wrap items-center gap-3">
+				<EditableFieldPrompt htmlFor="delay-ms" label="Delay (ms)" />
+				<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
 					<input
 						id="delay-ms"
 						type="number"
@@ -112,17 +113,19 @@ export function DebounceVisualizer() {
 						step={100}
 						value={delayMs}
 						onChange={(event) => setDelayMs(Number(event.target.value) || 100)}
-						className="w-28 rounded-md border border-card-border bg-background px-2 py-1 text-foreground"
+						className={`${INPUT_CLASSES} w-28`}
 					/>
-					<AppButton type="button" onClick={triggerDebouncedCall}>
-						Trigger debounced handler
-					</AppButton>
-					<AppButton type="button" onClick={runRapidScenario}>
-						Run rapid 3-click scenario
-					</AppButton>
-					<AppButton type="button" onClick={reset} disabled={traceLogs.length === 0}>
-						Reset
-					</AppButton>
+					<div className="flex shrink-0 flex-wrap gap-2">
+						<AppButton type="button" onClick={triggerDebouncedCall}>
+							Trigger debounced handler
+						</AppButton>
+						<AppButton type="button" onClick={runRapidScenario}>
+							Run rapid 3-click scenario
+						</AppButton>
+						<AppButton type="button" onClick={reset} disabled={traceLogs.length === 0}>
+							Reset
+						</AppButton>
+					</div>
 				</div>
 			</div>
 
