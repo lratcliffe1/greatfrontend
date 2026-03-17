@@ -24,7 +24,7 @@ test("filters questions by status", async ({ page }) => {
 	await page.getByLabel("Filter by status").selectOption("done");
 
 	await expect(page.getByTestId("question-title-debounce")).toBeVisible();
-	await expect(page.getByTestId("question-title-array-prototype-reduce")).toHaveCount(0);
+	await expect(page.getByTestId("question-title-array-prototype-reduce")).toBeVisible();
 });
 
 test("filters questions by difficulty", async ({ page }) => {

@@ -12,6 +12,7 @@ export type RendererLoader = () => Promise<RendererModule>;
 
 export const SOLUTION_RENDERER_LOADERS: Partial<Record<RendererKey, RendererLoader>> = {
 	"gfe75/debounce": () => import("@/solutions/gfe75/01-debounce/renderer"),
+	"gfe75/array-prototype-reduce": () => import("@/solutions/gfe75/02-array-prototype-reduce/renderer"),
 	"gfe75/throttle": () => import("@/solutions/gfe75/05-throttle/renderer"),
 	"gfe75/todo-list": () => import("@/solutions/gfe75/06-todo-list/renderer"),
 	"gfe75/contact-form": () => import("@/solutions/gfe75/07-contact-form/renderer"),
